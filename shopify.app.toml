@@ -1,0 +1,27 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "hydrogen-reviews"
+client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
+application_url = "https://strips-hiring-suits-where.trycloudflare.com"
+embedded = true
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = [
+  "https://strips-hiring-suits-where.trycloudflare.com/auth/callback",
+  "https://strips-hiring-suits-where.trycloudflare.com/auth/shopify/callback",
+  "https://strips-hiring-suits-where.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-01"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "hydrogen-starter.myshopify.com"

@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  shopifyId   String // Unique identifier from Shopify
+  name        String
+  description String?
+  reviews     Review[]
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int // Foreign key to Product
+  userId    BigInt? // Foreign key to User, if you're tracking users
+  title     String
+  content   String
+  rating    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id      BigInt   @id @default(autoincrement())
+  email   String   @unique
+  name    String?
+  reviews Review[]
+}
+
+model Session {
+  id          String    @id
+  shop        String
+  state       String
+  isOnline    Boolean   @default(false)
+  scope       String?
+  expires     DateTime?
+  accessToken String
+  userId      BigInt?
+}
