@@ -2,7 +2,7 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://strips-hiring-suits-where.trycloudflare.com"
+application_url = "https://edges-dale-principal-pond.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products"
 
 [auth]
 redirect_urls = [
-  "https://strips-hiring-suits-where.trycloudflare.com/auth/callback",
-  "https://strips-hiring-suits-where.trycloudflare.com/auth/shopify/callback",
-  "https://strips-hiring-suits-where.trycloudflare.com/api/auth/callback"
+  "https://edges-dale-principal-pond.trycloudflare.com/auth/callback",
+  "https://edges-dale-principal-pond.trycloudflare.com/auth/shopify/callback",
+  "https://edges-dale-principal-pond.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
