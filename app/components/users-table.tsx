@@ -1,6 +1,13 @@
 import type { User } from "@prisma/client";
 import { useNavigate } from "@remix-run/react";
-import { EmptyState, LegacyCard } from "@shopify/polaris";
+import {
+  EmptyState,
+  LegacyCard,
+  IndexTable,
+  Link,
+  Text,
+  useBreakpoints,
+} from "@shopify/polaris";
 import { useCallback } from "react";
 
 type UserTableProps = {
@@ -27,5 +34,34 @@ export const UserTable = ({ users }: UserTableProps) => {
       </LegacyCard>
     );
   }
-  return <div>Hello</div>;
+  return (
+    <LegacyCard>
+      <IndexTable
+        condensed={useBreakpoints().smDown}
+        resourceName={{
+          singular: "user",
+          plural: "users",
+        }}
+        selectable={false}
+        itemCount={users.length}
+        headings={[{ title: "Name" }, { title: "Email" }]}
+      >
+        {users.map(({ id, email, name }, index) => {
+          const url = `/app/users/${id}`;
+          return (
+            <IndexTable.Row id={id} key={id} position={index}>
+              <IndexTable.Cell>
+                <Link dataPrimaryLink url={url}>
+                  <Text fontWeight="bold" as="span">
+                    {name}
+                  </Text>
+                </Link>
+              </IndexTable.Cell>
+              <IndexTable.Cell>{email}</IndexTable.Cell>
+            </IndexTable.Row>
+          );
+        })}
+      </IndexTable>
+    </LegacyCard>
+  );
 };

@@ -3,7 +3,9 @@ import { authenticate } from "../shopify.server";
 import { PageLayout } from "~/components/page-layout";
 import db from "../db.server";
 import { UserTable } from "~/components/users-table";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
+import { Page } from "@shopify/polaris";
+import { useCallback } from "react";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
@@ -23,9 +25,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function Index() {
   const { users } = useLoaderData<typeof loader>();
+
+  const navigate = useNavigate();
+
+  const onAction = useCallback(() => {
+    navigate("/app/users/new");
+  }, [navigate]);
+
   return (
-    <PageLayout title="Users">
+    <Page
+      title="Users"
+      primaryAction={{
+        content: "Create new user",
+        onAction,
+      }}
+    >
       <UserTable users={users} />
-    </PageLayout>
+    </Page>
   );
 }
