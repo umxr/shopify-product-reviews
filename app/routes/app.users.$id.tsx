@@ -22,7 +22,7 @@ import {
   TextField,
 } from "@shopify/polaris";
 import { useState } from "react";
-import { validateUser } from "~/modles/user.server";
+import { validateUser } from "~/models/user.server";
 import { DeleteMinor } from "@shopify/polaris-icons";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
@@ -70,12 +70,12 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     return json({ errors }, { status: 422 });
   }
 
-  const qrCode =
+  const user =
     params.id === "new"
       ? await db.user.create({ data })
       : await db.user.update({ where: { id: Number(params.id) }, data });
 
-  return redirect(`/app/users/${qrCode.id}`);
+  return redirect(`/app/users/${user.id}`);
 };
 
 export default function User() {
@@ -180,56 +180,4 @@ export default function User() {
       </InlineGrid>
     </Page>
   );
-
-  //   <Page>
-  //     <ui-title-bar title={user?.id ? "Edit User" : "Create new user"}>
-  //       <button variant="breadcrumb" onClick={() => navigate("/app")}>
-  //         Users
-  //       </button>
-  //     </ui-title-bar>
-  //     <Layout>
-  //       <Layout.Section>
-  //         <BlockStack gap="500">
-  //           {/* [START title] */}
-  //           <Card>
-  //             <BlockStack gap="500">
-  //               <TextField
-  //                 id="name"
-  //                 label="Name"
-  //                 autoComplete="off"
-  //                 value={formState.name}
-  //                 onChange={(name) => setFormState({ ...formState, name })}
-  //                 error={errors.name}
-  //               />
-  //               <TextField
-  //                 id="email"
-  //                 label="Email"
-  //                 autoComplete="off"
-  //                 value={formState.email}
-  //                 onChange={(email) => setFormState({ ...formState, email })}
-  //                 error={errors.email}
-  //               />
-  //             </BlockStack>
-  //           </Card>
-  //         </BlockStack>
-  //       </Layout.Section>
-  //       <Layout.Section>
-  //         <PageActions
-  //           secondaryActions={[
-  //             {
-  //               content: "Delete",
-  //               loading: isDeleting,
-  //               disabled: !user.id || !user || isSaving || isDeleting,
-  //               destructive: true,
-  //               outline: true,
-  //               onAction: () =>
-  //                 submit({ action: "delete" }, { method: "post" }),
-  //             },
-  //           ]}
-
-  //         />
-  //       </Layout.Section>
-  //     </Layout>
-  //   </Page>
-  // );
 }

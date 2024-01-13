@@ -1,22 +1,22 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json, useLoaderData } from "@remix-run/react";
+import { json, useLoaderData, useNavigate } from "@remix-run/react";
 import {
   Box,
   Card,
   Layout,
   Link,
-  List,
   EmptyState,
   Text,
   BlockStack,
   LegacyCard,
+  Page,
 } from "@shopify/polaris";
 import { authenticate } from "~/shopify.server";
 import type { Product } from "~/types/product";
 import invariant from "tiny-invariant";
 import db from "../db.server";
-import { PageTitle } from "~/components/page-title";
 import { PageLayout } from "~/components/page-layout";
+import { useCallback } from "react";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(params.handle, "No product handle provided");
@@ -54,12 +54,16 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   });
 };
 
-const NoReviews = () => {
+type NoReviewsProps = {
+  onAction: () => void;
+};
+
+const NoReviews = ({ onAction }: NoReviewsProps) => {
   return (
     <LegacyCard sectioned>
       <EmptyState
         heading="Manage your product reviews"
-        action={{ content: "Add review" }}
+        action={{ content: "Add review", onAction }}
         image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
       >
         <p>
@@ -73,11 +77,23 @@ const NoReviews = () => {
 
 export default function ProductPage() {
   const { shopifyProduct, product } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
+
+  const onAction = useCallback(() => {
+    navigate(`/app/products/${shopifyProduct.handle}/reviews/new`);
+  }, [navigate, shopifyProduct.handle]);
+
   if (!product) {
     return (
-      <PageLayout title={shopifyProduct.title}>
-        <NoReviews />
-      </PageLayout>
+      <Page
+        title={shopifyProduct.title}
+        primaryAction={{
+          content: "Add review",
+          onAction,
+        }}
+      >
+        <NoReviews onAction={onAction} />
+      </Page>
     );
   }
   return (

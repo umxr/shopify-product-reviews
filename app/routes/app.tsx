@@ -26,6 +26,9 @@ export default function App() {
         <Link to="/app/users" rel="users">
           Users
         </Link>
+        <Link to="/app/settings" rel="settings">
+          Settings
+        </Link>
       </ui-nav-menu>
       <Outlet />
     </AppProvider>

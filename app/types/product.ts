@@ -4,3 +4,10 @@ export type Product = {
   status: "ACTIVE" | "ARCHIVED" | "DRAFT";
   handle: string;
 };
+
+export type ProductWithImage = Product & {
+  featuredImage: {
+    altText: string;
+    url: string;
+  };
+};

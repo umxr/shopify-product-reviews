@@ -19,6 +19,29 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       break;
+    case "PRODUCT_UPDATE":
+      const product = await db.product.findFirst({
+        where: { shopifyId: Number(payload.id) },
+      });
+
+      if (!product) {
+        await db.product.create({
+          data: {
+            shopifyId: payload.id,
+            name: payload.title,
+          },
+        });
+      } else {
+        await db.product.update({
+          where: { id: product.id },
+          data: {
+            shopifyId: payload.id,
+            name: payload.title,
+          },
+        });
+      }
+
+      break;
     case "CUSTOMERS_DATA_REQUEST":
     case "CUSTOMERS_REDACT":
     case "SHOP_REDACT":
