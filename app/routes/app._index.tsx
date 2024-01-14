@@ -10,7 +10,6 @@ import {
 import { authenticate } from "../shopify.server";
 import {
   useLoaderData,
-  useNavigate,
   useNavigation,
   useSearchParams,
 } from "@remix-run/react";
