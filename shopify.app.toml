@@ -2,7 +2,7 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://sole-tons-brisbane-check.trycloudflare.com"
+application_url = "https://maine-settings-equal-ids.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://sole-tons-brisbane-check.trycloudflare.com/auth/callback",
-  "https://sole-tons-brisbane-check.trycloudflare.com/auth/shopify/callback",
-  "https://sole-tons-brisbane-check.trycloudflare.com/api/auth/callback"
+  "https://maine-settings-equal-ids.trycloudflare.com/auth/callback",
+  "https://maine-settings-equal-ids.trycloudflare.com/auth/shopify/callback",
+  "https://maine-settings-equal-ids.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
