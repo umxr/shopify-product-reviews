@@ -2,18 +2,18 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://mercury-adapters-positive-comfort.trycloudflare.com"
+application_url = "https://sole-tons-brisbane-check.trycloudflare.com"
 embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://mercury-adapters-positive-comfort.trycloudflare.com/auth/callback",
-  "https://mercury-adapters-positive-comfort.trycloudflare.com/auth/shopify/callback",
-  "https://mercury-adapters-positive-comfort.trycloudflare.com/api/auth/callback"
+  "https://sole-tons-brisbane-check.trycloudflare.com/auth/callback",
+  "https://sole-tons-brisbane-check.trycloudflare.com/auth/shopify/callback",
+  "https://sole-tons-brisbane-check.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

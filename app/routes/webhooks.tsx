@@ -19,23 +19,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       break;
-    case "PRODUCT_UPDATE":
+    case "PRODUCTS_UPDATE":
+      const shopifyId = payload.admin_graphql_api_id;
       const product = await db.product.findFirst({
-        where: { shopifyId: Number(payload.id) },
+        where: { shopifyId },
       });
 
       if (!product) {
         await db.product.create({
           data: {
-            shopifyId: payload.id,
+            shopifyId: payload.admin_graphql_api_id,
             name: payload.title,
           },
         });
       } else {
         await db.product.update({
-          where: { id: product.id },
+          where: {},
           data: {
-            shopifyId: payload.id,
+            shopifyId: payload.admin_graphql_api_id,
             name: payload.title,
           },
         });
