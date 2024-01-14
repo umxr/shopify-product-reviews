@@ -8,7 +8,12 @@ import {
   Text,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
-import { useLoaderData, useSearchParams } from "@remix-run/react";
+import {
+  useLoaderData,
+  useNavigate,
+  useNavigation,
+  useSearchParams,
+} from "@remix-run/react";
 import { flattenEdges } from "~/utils/flattenEdges";
 import type { Product } from "~/types/product";
 import type { Tone } from "@shopify/polaris/build/ts/src/components/Badge";
@@ -109,6 +114,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
+  const navigation = useNavigation();
   const { products, pagination } = useLoaderData<typeof loader>();
   const [_, setSearchParams] = useSearchParams();
   const statusMap: Record<Product["status"], Tone> = {
@@ -141,6 +147,7 @@ export default function Index() {
       <LegacyCard>
         <IndexTable
           selectable={false}
+          loading={navigation.state === "loading"}
           resourceName={{
             singular: "product",
             plural: "products",
