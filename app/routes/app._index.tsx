@@ -47,6 +47,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           title
           status
           handle
+          metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
+            key
+            namespace
+            value
+          }
         }
       },
       pageInfo {
@@ -67,6 +72,11 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           title
           status
           handle
+          metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
+            key
+            namespace
+            value
+          }
         }
       },
       pageInfo {
@@ -115,12 +125,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const formattedProducts = flattenEdges(
       productsData.data.products
     ) as Product[];
+    const formattedProductsWithMetafields = formattedProducts.map((product) => {
+      const metafield = product.metafield
+        ? JSON.parse(product.metafield.value)
+        : [];
+      return {
+        ...product,
+        metafield,
+      };
+    });
 
     const hasMetafieldDefinition =
       metafieldDefinitionData.data?.metafieldDefinitions.edges.length > 0;
 
     return json({
-      products: formattedProducts,
+      products: formattedProductsWithMetafields,
       pagination: {
         ...pagination,
         first: numProductsForward,
@@ -259,7 +278,7 @@ export default function Index() {
               onPrevious: () => navigatePage(pagination.startCursor, false),
             }}
           >
-            {products.map(({ id, title, status, handle }, index) => {
+            {products.map(({ id, title, status, handle, metafield }, index) => {
               const formattedStatus =
                 status.charAt(0) + status.slice(1).toLowerCase();
               const url = `app/products/${handle}`;
@@ -276,7 +295,7 @@ export default function Index() {
                   <IndexTable.Cell>
                     <Badge tone={statusMap[status]}>{formattedStatus}</Badge>
                   </IndexTable.Cell>
-                  <IndexTable.Cell>{1}</IndexTable.Cell>
+                  <IndexTable.Cell>{metafield.length}</IndexTable.Cell>
                 </IndexTable.Row>
               );
             })}
