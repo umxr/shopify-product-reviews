@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import React, { useCallback, useEffect, useState, Fragment } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import type { ResourceListProps } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import {
