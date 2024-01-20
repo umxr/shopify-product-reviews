@@ -26,6 +26,7 @@ import { ProductReviewForm } from "~/components/product-review-form";
 import { GET_PRODUCT_QUERY } from "~/gql/product";
 import { createActionHandlers } from "~/actions/product";
 import { RequestMethod } from "~/actions";
+import { ExportMinor } from "@shopify/polaris-icons";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
@@ -84,6 +85,7 @@ export default function Index() {
   const { product, reviews, metafield } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const navigation = useNavigation();
+  const [exporting, setExporting] = useState(false);
 
   const productId = product?.id;
   const metafieldId = metafield?.id;
@@ -126,6 +128,33 @@ export default function Index() {
     setSelectedItems([]);
   }, [metafieldId, productId, reviews, selectedItems, submit]);
 
+  const onReviewsExport = useCallback(async () => {
+    setExporting(true);
+    try {
+      const response = await fetch(`${product.handle}/csv`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok.");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${product.handle}-reviews.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error during CSV download:", error);
+    } finally {
+      setExporting(false);
+    }
+  }, [product.handle]);
+
   useEffect(() => {
     if (actionData && actionData.status === "success") {
       const message = actionData.action === "create" ? "created" : "deleted";
@@ -158,7 +187,19 @@ export default function Index() {
       : 0;
 
   return (
-    <Page backAction={{ content: "Home", url: "/app" }} title={product.title}>
+    <Page
+      backAction={{ content: "Home", url: "/app" }}
+      title={product.title}
+      secondaryActions={[
+        {
+          content: "Export",
+          icon: ExportMinor,
+          accessibilityLabel: "Export reviews",
+          onAction: onReviewsExport,
+          loading: exporting,
+        },
+      ]}
+    >
       <InlineGrid columns={{ xs: 1, md: "2fr 1fr" }} gap="400">
         <BlockStack gap="400">
           <Card roundedAbove="sm">

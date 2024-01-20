@@ -21,7 +21,6 @@ query getProduct($handle: String!) {
   productByHandle(handle: $handle) {
     id
     title
-    description
     handle
     metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
       id,
