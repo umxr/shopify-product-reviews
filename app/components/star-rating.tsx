@@ -6,8 +6,8 @@ type StarRatingProps = {
 };
 
 export const StarRating: React.FC<StarRatingProps> = ({ reviews }) => {
+  if (!reviews) return null;
   const fullStars = Math.floor(reviews);
-
   return (
     <div>
       {Array(fullStars)

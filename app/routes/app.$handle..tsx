@@ -1,8 +1,5 @@
-import {
-  ActionFunctionArgs,
-  json,
-  type LoaderFunctionArgs,
-} from "@remix-run/node";
+import type { ActionFunctionArgs } from "@remix-run/node";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import React, { useCallback, useEffect, useState } from "react";
 import type { ResourceListProps } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
@@ -11,15 +8,11 @@ import {
   ResourceItem,
   ResourceList,
   Text,
-  Box,
   Page,
   InlineGrid,
   BlockStack,
   Card,
-  SkeletonDisplayText,
-  Bleed,
-  Divider,
-  SkeletonBodyText,
+  EmptyState,
 } from "@shopify/polaris";
 import {
   useActionData,
@@ -30,49 +23,23 @@ import {
 import { StarRating } from "~/components/star-rating";
 import type { ProductReview } from "~/components/product-review-form";
 import { ProductReviewForm } from "~/components/product-review-form";
-
-const SkeletonLabel = (props) => {
-  return (
-    <Box
-      background="bg-fill-tertiary"
-      minHeight="1rem"
-      maxWidth="5rem"
-      borderRadius="base"
-      {...props}
-    />
-  );
-};
+import { GET_PRODUCT_QUERY } from "~/gql/product";
+import { createActionHandlers } from "~/actions/product";
+import { RequestMethod } from "~/actions";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const handle = params.handle;
 
   try {
-    const productRequest = await admin.graphql(
-      `#graphql
-      query getProduct($handle: String!) {
-        productByHandle(handle: $handle) {
-          id
-          title
-          description
-          handle
-          metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
-            id,
-            key
-            namespace
-            value
-          }
-        }
-      }`,
-      {
-        variables: {
-          handle,
-        },
-      }
-    );
+    const productRequest = await admin.graphql(GET_PRODUCT_QUERY, {
+      variables: {
+        handle,
+      },
+    });
 
     const productJson = await productRequest.json();
-    const metafield = productJson.data.productByHandle?.metafield;
+    const metafield = productJson.data.productByHandle?.metafield ?? null;
     delete productJson.data.productByHandle.metafield;
 
     return json({
@@ -81,135 +48,35 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       reviews: metafield ? JSON.parse(metafield.value) : [],
     });
   } catch (error) {
-    return json({
-      product: null,
-      reviews: [],
-      metafield: null,
-    });
+    console.error("Failed to load product", error);
+    return json(
+      {
+        product: null,
+        reviews: [],
+        metafield: null,
+        error: "Failed to load product",
+      },
+      {
+        status: 500,
+      }
+    );
   }
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
+  const { handlePostRequest, handleDeleteRequest } =
+    createActionHandlers(admin);
 
-  if (request.method === "POST") {
-    const reviews = JSON.parse(formData.get("reviews"));
-    const name = formData.get("name");
-    const message = formData.get("message");
-    const rating = formData.get("rating");
-    const id = formData.get("id");
-    const productId = formData.get("productId");
-    const metafieldId = formData.get("metafieldId");
-
-    const updatedReviews = JSON.stringify([
-      ...reviews,
-      {
-        name,
-        message,
-        rating,
-        id,
-      },
-    ]);
-
-    await admin.graphql(
-      `#graphql
-      mutation updateProduct($input: ProductInput!) {
-        productUpdate(input: $input) {
-          product {
-            id
-            metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
-              key
-              namespace
-              value
-            }
-          }
-          userErrors {
-            field
-            message
-          }
-        }
-      }`,
-      {
-        variables: {
-          input: {
-            id: productId,
-            metafields: [
-              {
-                id: metafieldId,
-                value: updatedReviews,
-              },
-            ],
-          },
-        },
-      }
-    );
-
-    try {
-      return json({
-        action: "create",
-        status: "success",
-      });
-    } catch (error) {
-      console.log("error", error);
-      return json({
-        status: "error",
-      });
-    }
+  switch (request.method) {
+    case RequestMethod.POST:
+      return await handlePostRequest(formData);
+    case RequestMethod.DELETE:
+      return await handleDeleteRequest(formData);
+    default:
+      return new Response(null, { status: 405 }); // Method Not Allowed
   }
-
-  if (request.method === "DELETE") {
-    try {
-      const reviews = formData.get("reviews");
-      const productId = formData.get("productId");
-      const metafieldId = formData.get("metafieldId");
-      await admin.graphql(
-        `#graphql
-      mutation updateProduct($input: ProductInput!) {
-        productUpdate(input: $input) {
-          product {
-            id
-            metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
-              key
-              namespace
-              value
-            }
-          }
-          userErrors {
-            field
-            message
-          }
-        }
-      }`,
-        {
-          variables: {
-            input: {
-              id: productId,
-              metafields: [
-                {
-                  id: metafieldId,
-                  value: reviews,
-                },
-              ],
-            },
-          },
-        }
-      );
-      return json({
-        action: "delete",
-        status: "success",
-      });
-    } catch (error) {
-      console.log("error", error);
-      return json({
-        status: "error",
-      });
-    }
-  }
-
-  return new Response(null, {
-    status: 304,
-  });
 };
 
 export default function Index() {
@@ -217,6 +84,9 @@ export default function Index() {
   const { product, reviews, metafield } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const navigation = useNavigation();
+
+  const productId = product?.id;
+  const metafieldId = metafield?.id;
 
   const [selectedItems, setSelectedItems] = useState<
     ResourceListProps["selectedItems"]
@@ -228,39 +98,39 @@ export default function Index() {
         {
           ...data,
           reviews: JSON.stringify([...reviews]),
-          productId: product.id,
-          metafieldId: metafield?.id,
+          productId,
+          metafieldId,
         },
         {
           method: "POST",
         }
       );
     },
-    [metafield?.id, product.id, reviews, submit]
+    [metafieldId, productId, reviews, submit]
   );
 
   const onReviewDelete = useCallback(() => {
     const updatedReviews = reviews.filter((review: ProductReview) => {
-      return !selectedItems!.includes(review.id);
+      return selectedItems ? !selectedItems.includes(review.id) : true;
     });
     submit(
       {
         reviews: JSON.stringify([...updatedReviews]),
-        productId: product.id,
-        metafieldId: metafield?.id,
+        productId,
+        metafieldId,
       },
       {
         method: "DELETE",
       }
     );
     setSelectedItems([]);
-  }, [metafield?.id, product.id, reviews, selectedItems, submit]);
+  }, [metafieldId, productId, reviews, selectedItems, submit]);
 
   useEffect(() => {
     if (actionData && actionData.status === "success") {
       const message = actionData.action === "create" ? "created" : "deleted";
       shopify.toast.show(`Review ${message} successfully`);
-    } else if (actionData && actionData.status === "errro") {
+    } else if (actionData && actionData.status === "error") {
       const message = actionData.action === "create" ? "creating" : "deleting";
       shopify.toast.show(`Review ${message} failed`, {
         isError: true,
@@ -282,9 +152,10 @@ export default function Index() {
   ];
 
   const averageRating =
-    reviews.reduce((acc: number, review: ProductReview) => {
-      return acc + Number(review.rating);
-    }, 0) / reviews.length;
+    reviews.length > 0
+      ? reviews.reduce((acc, review) => acc + Number(review.rating), 0) /
+        reviews.length
+      : 0;
 
   return (
     <Page backAction={{ content: "Home", url: "/app" }} title={product.title}>
@@ -298,6 +169,15 @@ export default function Index() {
           </Card>
           <Card roundedAbove="sm" padding="0">
             <ResourceList
+              emptyState={
+                reviews.length === 0 ? (
+                  <EmptyState heading="This product has no reviews" image={""}>
+                    <Text as="p">
+                      Once a customer leaves a review, it will show up here.
+                    </Text>
+                  </EmptyState>
+                ) : null
+              }
               resourceName={resourceName}
               items={reviews}
               bulkActions={bulkActions}
@@ -339,7 +219,11 @@ export default function Index() {
               <Text as="p" variant="headingLg">
                 Overall Rating
               </Text>
-              <StarRating reviews={averageRating} />
+              {reviews.length > 0 ? (
+                <StarRating reviews={averageRating} />
+              ) : (
+                <Text as="p">No reviews</Text>
+              )}
             </BlockStack>
           </Card>
         </BlockStack>

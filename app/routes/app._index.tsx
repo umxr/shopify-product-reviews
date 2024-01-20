@@ -1,8 +1,5 @@
-import {
-  ActionFunctionArgs,
-  json,
-  type LoaderFunctionArgs,
-} from "@remix-run/node";
+import type { ActionFunctionArgs } from "@remix-run/node";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import {
   Badge,
   Banner,
@@ -10,7 +7,6 @@ import {
   IndexTable,
   LegacyCard,
   Link,
-  List,
   Page,
   Text,
 } from "@shopify/polaris";
@@ -26,6 +22,11 @@ import { flattenEdges } from "~/utils/flattenEdges";
 import type { Product } from "~/types/product";
 import type { Tone } from "@shopify/polaris/build/ts/src/components/Badge";
 import { useCallback, useEffect } from "react";
+import {
+  BACKWARD_PAGINATION_QUERY,
+  FORWARD_PAGINATION_QUERY,
+  METAFIELD_DEFINITION_QUERY,
+} from "~/gql/product";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
@@ -38,86 +39,23 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const numProductsBackward = Number(searchParams.get("last")) || 10;
   const cursorBackward = searchParams.get("before") || null;
 
-  // Forward Pagination Query
-  const forwardPaginationQuery = `query getProducts($numProducts: Int!, $cursor: String) {
-    products (first: $numProducts, after: $cursor) {
-      edges {
-        node {
-          id
-          title
-          status
-          handle
-          metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
-            key
-            namespace
-            value
-          }
-        }
-      },
-      pageInfo {
-        startCursor,
-        endCursor,
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }`;
-
-  // Backward Pagination Query
-  const backwardPaginationQuery = `query getProducts($numProducts: Int!, $cursor: String) {
-    products (last: $numProducts, before: $cursor) {
-      edges {
-        node {
-          id
-          title
-          status
-          handle
-          metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
-            key
-            namespace
-            value
-          }
-        }
-      },
-      pageInfo {
-        startCursor,
-        endCursor,
-        hasPreviousPage
-        hasNextPage
-      }
-    }
-  }`;
-
-  const productMetafieldDefinitionQuery = `{
-    metafieldDefinitions(namespace: "hydrogen_reviews", ownerType: PRODUCT, first: 1) {
-      edges {
-        node {
-          name
-          type {
-            name
-          }
-        }
-      }
-    }
-  }`;
-
   let query, variables;
   if (cursorForward) {
-    query = forwardPaginationQuery;
+    query = FORWARD_PAGINATION_QUERY;
     variables = { numProducts: numProductsForward, cursor: cursorForward };
   } else if (cursorBackward) {
-    query = backwardPaginationQuery;
+    query = BACKWARD_PAGINATION_QUERY;
     variables = { numProducts: numProductsBackward, cursor: cursorBackward };
   } else {
     // Default to forward pagination with no cursor
-    query = forwardPaginationQuery;
+    query = FORWARD_PAGINATION_QUERY;
     variables = { numProducts: numProductsForward, cursor: null };
   }
 
   try {
     const response = await admin.graphql(query, { variables });
     const metafieldDefinitionResponse = await admin.graphql(
-      productMetafieldDefinitionQuery
+      METAFIELD_DEFINITION_QUERY
     );
     const productsData = await response.json();
     const metafieldDefinitionData = await metafieldDefinitionResponse.json();
