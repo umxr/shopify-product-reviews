@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, Fragment } from "react";
 import type { ResourceListProps } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import {
@@ -167,19 +167,6 @@ export default function Index() {
     }
   }, [actionData]);
 
-  const resourceName = {
-    singular: "review",
-    plural: "reviews",
-  };
-
-  const bulkActions = [
-    {
-      content: selectedItems?.length === 1 ? "Delete review" : "Delete reviews",
-      onAction: onReviewDelete,
-      destructive: true,
-    },
-  ];
-
   const averageRating =
     reviews.length > 0
       ? reviews.reduce((acc, review) => acc + Number(review.rating), 0) /
@@ -219,9 +206,21 @@ export default function Index() {
                   </EmptyState>
                 ) : null
               }
-              resourceName={resourceName}
+              resourceName={{
+                singular: "review",
+                plural: "reviews",
+              }}
               items={reviews}
-              bulkActions={bulkActions}
+              bulkActions={[
+                {
+                  content:
+                    selectedItems?.length === 1
+                      ? "Delete review"
+                      : "Delete reviews",
+                  onAction: onReviewDelete,
+                  destructive: true,
+                },
+              ]}
               selectedItems={selectedItems}
               onSelectionChange={setSelectedItems}
               loading={navigation.state === "loading"}
