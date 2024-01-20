@@ -1,5 +1,9 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import React, { useState } from "react";
+import {
+  ActionFunctionArgs,
+  json,
+  type LoaderFunctionArgs,
+} from "@remix-run/node";
+import React, { useCallback, useState } from "react";
 import type { ResourceListProps } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import {
@@ -17,8 +21,15 @@ import {
   Divider,
   SkeletonBodyText,
 } from "@shopify/polaris";
-import { useLoaderData } from "@remix-run/react";
+import {
+  useActionData,
+  useLoaderData,
+  useNavigation,
+  useSubmit,
+} from "@remix-run/react";
 import { StarRating } from "~/components/star-rating";
+import type { ProductReview } from "~/components/product-review-form";
+import { ProductReviewForm } from "~/components/product-review-form";
 
 const SkeletonLabel = (props) => {
   return (
@@ -46,6 +57,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           description
           handle
           metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
+            id,
             key
             namespace
             value
@@ -65,18 +77,103 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
     return json({
       product: productJson.data.productByHandle,
+      metafield,
       reviews: metafield ? JSON.parse(metafield.value) : [],
     });
   } catch (error) {
     return json({
       product: null,
       reviews: [],
+      metafield: null,
     });
   }
 };
 
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { admin } = await authenticate.admin(request);
+  const formData = await request.formData();
+
+  if (request.method === "POST") {
+    const reviews = JSON.parse(formData.get("reviews"));
+    const name = formData.get("name");
+    const message = formData.get("message");
+    const rating = formData.get("rating");
+    const id = formData.get("id");
+    const productId = formData.get("productId");
+    const metafieldId = formData.get("metafieldId");
+
+    const updatedReviews = JSON.stringify([
+      ...reviews,
+      {
+        name,
+        message,
+        rating,
+        id,
+      },
+    ]);
+
+    const productUpdateRequest = await admin.graphql(
+      `#graphql
+      mutation updateProduct($input: ProductInput!) {
+        productUpdate(input: $input) {
+          product {
+            id
+            metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
+              key
+              namespace
+              value
+            }
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+      {
+        variables: {
+          input: {
+            id: productId,
+            metafields: [
+              {
+                id: metafieldId,
+                value: updatedReviews,
+              },
+            ],
+          },
+        },
+      }
+    );
+
+    const productUpdateJson = await productUpdateRequest.json();
+
+    try {
+      return json({
+        productUpdateJson,
+        status: "success",
+      });
+    } catch (error) {
+      console.log("error", error);
+      return json({
+        status: "error",
+      });
+    }
+  }
+
+  if (request.method === "DELETE") {
+    return json(formData);
+  }
+
+  return new Response(null, {
+    status: 304,
+  });
+};
+
 export default function Index() {
-  const { product, reviews } = useLoaderData<typeof loader>();
+  const actionData = useActionData();
+  const { product, reviews, metafield } = useLoaderData<typeof loader>();
+  const submit = useSubmit();
+  const navigation = useNavigation();
 
   const [selectedItems, setSelectedItems] = useState<
     ResourceListProps["selectedItems"]
@@ -95,17 +192,32 @@ export default function Index() {
     },
   ];
 
+  const onReviewCreate = useCallback(
+    (data: ProductReview) => {
+      submit(
+        {
+          ...data,
+          reviews: JSON.stringify([...reviews]),
+          productId: product.id,
+          metafieldId: metafield?.id,
+        },
+        {
+          method: "POST",
+        }
+      );
+    },
+    [metafield?.id, product.id, reviews, submit]
+  );
+
   return (
     <Page backAction={{ content: "Home", url: "/app" }} title={product.title}>
       <InlineGrid columns={{ xs: 1, md: "2fr 1fr" }} gap="400">
         <BlockStack gap="400">
           <Card roundedAbove="sm">
-            <BlockStack gap="400">
-              <SkeletonLabel />
-              <Box border="divider" borderRadius="base" minHeight="2rem" />
-              <SkeletonLabel maxWidth="8rem" />
-              <Box border="divider" borderRadius="base" minHeight="20rem" />
-            </BlockStack>
+            <ProductReviewForm
+              onSubmit={onReviewCreate}
+              state={navigation.state}
+            />
           </Card>
           <Card roundedAbove="sm" padding="0">
             <ResourceList
@@ -117,7 +229,6 @@ export default function Index() {
               renderItem={(item) => {
                 const { id, name, rating, message } = item;
                 const media = <Avatar customer size="md" name={name} />;
-
                 return (
                   <ResourceItem
                     id={id}
@@ -135,7 +246,7 @@ export default function Index() {
                       <Text fontWeight="bold" as="span">
                         {name}
                       </Text>
-                      <StarRating reviews={3} />
+                      <StarRating reviews={Number(rating)} />
                     </h3>
                     <div>{message}</div>
                   </ResourceItem>
