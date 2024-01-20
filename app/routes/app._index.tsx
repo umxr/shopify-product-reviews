@@ -281,12 +281,11 @@ export default function Index() {
             {products.map(({ id, title, status, handle, metafield }, index) => {
               const formattedStatus =
                 status.charAt(0) + status.slice(1).toLowerCase();
-              const url = `app/products/${handle}`;
 
               return (
                 <IndexTable.Row id={id} key={id} position={index}>
                   <IndexTable.Cell>
-                    <Link dataPrimaryLink url={url}>
+                    <Link dataPrimaryLink url={handle}>
                       <Text fontWeight="bold" as="span">
                         {title}
                       </Text>

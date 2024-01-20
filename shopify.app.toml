@@ -2,7 +2,7 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://filing-quad-etc-vat.trycloudflare.com"
+application_url = "https://exports-worst-pharmacy-gui.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://filing-quad-etc-vat.trycloudflare.com/auth/callback",
-  "https://filing-quad-etc-vat.trycloudflare.com/auth/shopify/callback",
-  "https://filing-quad-etc-vat.trycloudflare.com/api/auth/callback"
+  "https://exports-worst-pharmacy-gui.trycloudflare.com/auth/callback",
+  "https://exports-worst-pharmacy-gui.trycloudflare.com/auth/shopify/callback",
+  "https://exports-worst-pharmacy-gui.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
