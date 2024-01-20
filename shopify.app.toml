@@ -2,7 +2,7 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://jan-inventory-skills-promptly.trycloudflare.com"
+application_url = "https://immigration-lobby-tunisia-supposed.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://jan-inventory-skills-promptly.trycloudflare.com/auth/callback",
-  "https://jan-inventory-skills-promptly.trycloudflare.com/auth/shopify/callback",
-  "https://jan-inventory-skills-promptly.trycloudflare.com/api/auth/callback"
+  "https://immigration-lobby-tunisia-supposed.trycloudflare.com/auth/callback",
+  "https://immigration-lobby-tunisia-supposed.trycloudflare.com/auth/shopify/callback",
+  "https://immigration-lobby-tunisia-supposed.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

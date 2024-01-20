@@ -23,6 +23,9 @@ export default function App() {
         <Link to="/app" rel="home">
           Home
         </Link>
+        <Link to="/app/import" rel="import">
+          Import
+        </Link>
       </ui-nav-menu>
       <Outlet />
     </AppProvider>
