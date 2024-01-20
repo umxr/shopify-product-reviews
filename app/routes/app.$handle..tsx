@@ -281,6 +281,11 @@ export default function Index() {
     },
   ];
 
+  const averageRating =
+    reviews.reduce((acc: number, review: ProductReview) => {
+      return acc + Number(review.rating);
+    }, 0) / reviews.length;
+
   return (
     <Page backAction={{ content: "Home", url: "/app" }} title={product.title}>
       <InlineGrid columns={{ xs: 1, md: "2fr 1fr" }} gap="400">
@@ -331,16 +336,10 @@ export default function Index() {
         <BlockStack gap={{ xs: "400", md: "200" }}>
           <Card roundedAbove="sm">
             <BlockStack gap="400">
-              <SkeletonDisplayText size="small" />
-              <Box border="divider" borderRadius="base" minHeight="2rem" />
-              <Box>
-                <Bleed marginInline={{ xs: 400, sm: 500 }}>
-                  <Divider />
-                </Bleed>
-              </Box>
-              <SkeletonLabel />
-              <Divider />
-              <SkeletonBodyText />
+              <Text as="p" variant="headingLg">
+                Overall Rating
+              </Text>
+              <StarRating reviews={averageRating} />
             </BlockStack>
           </Card>
         </BlockStack>
