@@ -3,7 +3,7 @@ import {
   json,
   type LoaderFunctionArgs,
 } from "@remix-run/node";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import type { ResourceListProps } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import {
@@ -112,7 +112,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       },
     ]);
 
-    const productUpdateRequest = await admin.graphql(
+    await admin.graphql(
       `#graphql
       mutation updateProduct($input: ProductInput!) {
         productUpdate(input: $input) {
@@ -145,11 +145,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     );
 
-    const productUpdateJson = await productUpdateRequest.json();
-
     try {
       return json({
-        productUpdateJson,
+        action: "create",
         status: "success",
       });
     } catch (error) {
@@ -161,7 +159,52 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   if (request.method === "DELETE") {
-    return json(formData);
+    try {
+      const reviews = formData.get("reviews");
+      const productId = formData.get("productId");
+      const metafieldId = formData.get("metafieldId");
+      await admin.graphql(
+        `#graphql
+      mutation updateProduct($input: ProductInput!) {
+        productUpdate(input: $input) {
+          product {
+            id
+            metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
+              key
+              namespace
+              value
+            }
+          }
+          userErrors {
+            field
+            message
+          }
+        }
+      }`,
+        {
+          variables: {
+            input: {
+              id: productId,
+              metafields: [
+                {
+                  id: metafieldId,
+                  value: reviews,
+                },
+              ],
+            },
+          },
+        }
+      );
+      return json({
+        action: "delete",
+        status: "success",
+      });
+    } catch (error) {
+      console.log("error", error);
+      return json({
+        status: "error",
+      });
+    }
   }
 
   return new Response(null, {
@@ -178,19 +221,6 @@ export default function Index() {
   const [selectedItems, setSelectedItems] = useState<
     ResourceListProps["selectedItems"]
   >([]);
-
-  const resourceName = {
-    singular: "review",
-    plural: "reviews",
-  };
-
-  const bulkActions = [
-    {
-      content: "Delete reviews",
-      onAction: () => console.log("Todo: implement bulk add tags"),
-      destructive: true,
-    },
-  ];
 
   const onReviewCreate = useCallback(
     (data: ProductReview) => {
@@ -209,6 +239,48 @@ export default function Index() {
     [metafield?.id, product.id, reviews, submit]
   );
 
+  const onReviewDelete = useCallback(() => {
+    const updatedReviews = reviews.filter((review: ProductReview) => {
+      return !selectedItems!.includes(review.id);
+    });
+    submit(
+      {
+        reviews: JSON.stringify([...updatedReviews]),
+        productId: product.id,
+        metafieldId: metafield?.id,
+      },
+      {
+        method: "DELETE",
+      }
+    );
+    setSelectedItems([]);
+  }, [metafield?.id, product.id, reviews, selectedItems, submit]);
+
+  useEffect(() => {
+    if (actionData && actionData.status === "success") {
+      const message = actionData.action === "create" ? "created" : "deleted";
+      shopify.toast.show(`Review ${message} successfully`);
+    } else if (actionData && actionData.status === "errro") {
+      const message = actionData.action === "create" ? "creating" : "deleting";
+      shopify.toast.show(`Review ${message} failed`, {
+        isError: true,
+      });
+    }
+  }, [actionData]);
+
+  const resourceName = {
+    singular: "review",
+    plural: "reviews",
+  };
+
+  const bulkActions = [
+    {
+      content: selectedItems?.length === 1 ? "Delete review" : "Delete reviews",
+      onAction: onReviewDelete,
+      destructive: true,
+    },
+  ];
+
   return (
     <Page backAction={{ content: "Home", url: "/app" }} title={product.title}>
       <InlineGrid columns={{ xs: 1, md: "2fr 1fr" }} gap="400">
@@ -226,6 +298,7 @@ export default function Index() {
               bulkActions={bulkActions}
               selectedItems={selectedItems}
               onSelectionChange={setSelectedItems}
+              loading={navigation.state === "loading"}
               renderItem={(item) => {
                 const { id, name, rating, message } = item;
                 const media = <Avatar customer size="md" name={name} />;

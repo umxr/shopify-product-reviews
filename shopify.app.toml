@@ -2,7 +2,7 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://passed-mw-portsmouth-sep.trycloudflare.com"
+application_url = "https://tickets-consultant-french-bradford.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://passed-mw-portsmouth-sep.trycloudflare.com/auth/callback",
-  "https://passed-mw-portsmouth-sep.trycloudflare.com/auth/shopify/callback",
-  "https://passed-mw-portsmouth-sep.trycloudflare.com/api/auth/callback"
+  "https://tickets-consultant-french-bradford.trycloudflare.com/auth/callback",
+  "https://tickets-consultant-french-bradford.trycloudflare.com/auth/shopify/callback",
+  "https://tickets-consultant-french-bradford.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
