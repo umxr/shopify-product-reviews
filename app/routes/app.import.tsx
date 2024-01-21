@@ -21,10 +21,10 @@ import { UndoMajor, NoteMinor, TickMinor } from "@shopify/polaris-icons";
 import { useState, useCallback, useEffect } from "react";
 
 import { useActionData, useSearchParams, useSubmit } from "@remix-run/react";
-import type { ParsedProduct } from "~/actions/csv";
-import { createActionHandlers, parseAndValidateCSV } from "~/actions/csv";
+import { createActionHandlers } from "~/actions/csv";
 import { RequestMethod } from "~/actions";
 import { authenticate } from "~/shopify.server";
+import type { ParsedProduct } from "~/actions/csv/types";
 
 const TOPIC = {
   VALIDATE: "VALIDATE",
@@ -68,6 +68,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ error: "Invalid file type." }, { status: 400 });
   }
 
+  const { uploadProducts, parseAndValidateCSV } = createActionHandlers(admin);
+
   const validationResults = await parseAndValidateCSV(file);
   if (validationResults.status === "error") {
     return json({
@@ -88,7 +90,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
   }
 
-  const { uploadProducts } = createActionHandlers(admin);
   const uploadResult = await uploadProducts(validationResults.products_raw);
 
   if (uploadResult.status === "error") {

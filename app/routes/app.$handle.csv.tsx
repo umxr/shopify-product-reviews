@@ -1,24 +1,9 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import { RequestMethod } from "~/actions";
 import { GET_PRODUCT_QUERY } from "~/gql/product";
-import type { ProductReview } from "~/components/product-review-form";
-
-const convertReviewsToCSV = (reviews: ProductReview[]) => {
-  const headers = "Name,Rating,Message\n";
-  const rows = reviews
-    .map(
-      (review) =>
-        `"${review.name}","${review.rating}","${review.message.replace(
-          /"/g,
-          '""'
-        )}"`
-    )
-    .join("\n");
-
-  return headers + rows;
-};
+import { convertReviewsToCSV } from "~/actions/csv/util";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);

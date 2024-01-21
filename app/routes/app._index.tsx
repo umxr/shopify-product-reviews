@@ -4,8 +4,8 @@ import {
   Badge,
   Banner,
   BlockStack,
+  Card,
   IndexTable,
-  LegacyCard,
   Link,
   Page,
   Text,
@@ -180,7 +180,7 @@ export default function Index() {
             </Text>
           </Banner>
         )}
-        <LegacyCard>
+        <Card roundedAbove="sm" padding="0">
           <IndexTable
             selectable={false}
             loading={navigation.state === "loading"}
@@ -224,7 +224,7 @@ export default function Index() {
               );
             })}
           </IndexTable>
-        </LegacyCard>
+        </Card>
       </BlockStack>
     </Page>
   );

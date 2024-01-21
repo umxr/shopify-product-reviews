@@ -23,7 +23,7 @@ import {
 import { StarRating } from "~/components/star-rating";
 import type { ProductReview } from "~/components/product-review-form";
 import { ProductReviewForm } from "~/components/product-review-form";
-import { createActionHandlers } from "~/actions/product";
+import { createActionHandlers } from "~/actions/handle";
 import { RequestMethod } from "~/actions";
 import { ExportMinor } from "@shopify/polaris-icons";
 import { createProductHandler } from "~/api/product";
