@@ -5,13 +5,13 @@ import type {
 import { createMetafieldHandler } from "~/api/metafield";
 import { createProductHandler } from "~/api/product";
 import type { ProductReview } from "~/components/product-review-form";
-import type { ParsedProduct, CSVRow } from "./csv/types";
+import type { ParsedProduct, CSVRow } from "./types";
 import {
   constructProductReviews,
   validateCSVRow,
   parseProductResult,
-} from "./csv/util";
-import { EXPECTED_HEADERS } from "./csv/const";
+} from "./util";
+import { EXPECTED_HEADERS } from "./const";
 
 type ParseAndValidateCSVInput = File;
 type ParseAndValidateCSVErrorResult = {

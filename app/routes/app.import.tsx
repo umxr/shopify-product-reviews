@@ -21,10 +21,10 @@ import { UndoMajor, NoteMinor, TickMinor } from "@shopify/polaris-icons";
 import { useState, useCallback, useEffect } from "react";
 
 import { useActionData, useSearchParams, useSubmit } from "@remix-run/react";
-import { createActionHandlers } from "~/actions/csv";
+import { createActionHandlers } from "~/actions/import/action";
 import { RequestMethod } from "~/actions";
 import { authenticate } from "~/shopify.server";
-import type { ParsedProduct } from "~/actions/csv/types";
+import type { ParsedProduct } from "~/actions/import/types";
 
 const TOPIC = {
   VALIDATE: "VALIDATE",

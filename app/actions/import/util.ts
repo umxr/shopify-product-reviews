@@ -1,4 +1,4 @@
-import { ProductReview } from "~/components/product-review-form";
+import type { ProductReview } from "~/components/product-review-form";
 import { generateUUID } from "~/utils/generate-uuid";
 import type { CSVRow, ParsedProduct } from "./types";
 

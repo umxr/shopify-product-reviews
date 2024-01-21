@@ -1,45 +1,28 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import { RequestMethod } from "~/actions";
-import { GET_PRODUCT_QUERY } from "~/gql/product";
-import { convertReviewsToCSV } from "~/actions/csv/util";
+import { convertReviewsToCSV } from "~/actions/import/util";
+import { createProductHandler } from "~/api/product";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
-  switch (request.method) {
-    case RequestMethod.GET:
-      const handle = params.handle;
-      if (!handle) {
-        console.error("Missing handle for GET request");
-        return json(
-          {
-            error: "Missing handle for GET request",
-          },
-          {
-            status: 400,
-          }
-        );
-      }
-      const productRequest = await admin.graphql(GET_PRODUCT_QUERY, {
-        variables: {
-          handle,
-        },
-      });
+  if (request.method !== RequestMethod.GET) {
+    return new Response(null, { status: 405 }); // Method Not Allowed
+  }
 
-      const productJson = await productRequest.json();
-      const metafield = productJson.data.productByHandle?.metafield ?? null;
-      const reviews = metafield ? JSON.parse(metafield.value) : [];
+  try {
+    const { getProductByHandle } = createProductHandler(admin);
+    const { reviews } = await getProductByHandle(params.handle as string);
 
-      const csvData = convertReviewsToCSV(reviews);
+    const csvData = convertReviewsToCSV(reviews);
 
-      const headers = new Headers();
-      headers.append("Content-Type", "text/csv");
-      headers.append("Content-Disposition", "attachment; filename=reviews.csv");
+    const headers = new Headers();
+    headers.append("Content-Type", "text/csv");
+    headers.append("Content-Disposition", "attachment; filename=reviews.csv");
 
-      return new Response(csvData, { headers });
-    default:
-      return new Response(null, { status: 405 }); // Method Not Allowed
+    return new Response(csvData, { headers });
+  } catch (error) {
+    return new Response(null, { status: 400 });
   }
 };
