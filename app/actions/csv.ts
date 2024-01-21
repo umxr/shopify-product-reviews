@@ -1,11 +1,11 @@
-type CSVRow = {
+export type CSVRow = {
   handle: string;
   name: string;
   message: string;
   rating: string;
 };
 
-type ParsedProduct = {
+export type ParsedProduct = {
   handle: string;
   name: string;
   message: string;

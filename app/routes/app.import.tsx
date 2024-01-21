@@ -21,6 +21,7 @@ import { UndoMajor, NoteMinor, TickMinor } from "@shopify/polaris-icons";
 import { useState, useCallback, useEffect } from "react";
 
 import { useActionData, useSubmit } from "@remix-run/react";
+import type { ParsedProduct } from "~/actions/csv";
 import { parseAndValidateCSV, parseProductResult } from "~/actions/csv";
 
 const TOPIC = {
@@ -31,6 +32,21 @@ const RESULT = {
   SUCCESS: "SUCCESS",
   ERROR: "ERROR",
 } as const;
+
+type ActionDataError = {
+  status: "error";
+  error: string;
+  details: string[];
+};
+
+type ActionDataSuccess = {
+  status: "success";
+  products: ParsedProduct[]; // Assuming ParsedProduct is defined elsewhere
+  topic: typeof TOPIC.VALIDATE;
+  topic_status: typeof RESULT.SUCCESS;
+};
+
+type ActionData = ActionDataError | ActionDataSuccess;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const uploadHandler = unstable_createFileUploadHandler();
@@ -62,9 +78,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Import() {
   const submit = useSubmit();
-  const actionData = useActionData();
+  const actionData = useActionData<ActionData>() as
+    | ActionDataError
+    | ActionDataSuccess
+    | undefined;
   const [file, setFile] = useState<File>();
-  const [validated, setValidated] = useState(false);
+  const [isImportValid, setImportValid] = useState(false);
 
   const handleDropZoneDrop = useCallback(
     (_dropFiles: File[], acceptedFiles: File[], _rejectedFiles: File[]) => {
@@ -92,8 +111,8 @@ export default function Import() {
   }, [file, submit]);
 
   const handleFileImport = useCallback(() => {
-    !validated ? handleFileValidate() : console.log("importing");
-  }, [handleFileValidate, validated]);
+    !isImportValid ? handleFileValidate() : console.log("importing");
+  }, [handleFileValidate, isImportValid]);
 
   const onFileClear = useCallback(() => {
     setFile(undefined);
@@ -117,14 +136,20 @@ export default function Import() {
 
   useEffect(() => {
     if (
+      actionData?.status === "success" &&
       actionData?.topic === TOPIC.VALIDATE &&
       actionData?.topic_status === RESULT.SUCCESS
     ) {
-      setValidated(true);
+      setImportValid(true);
       console.log("passed validation");
       console.log(actionData?.products);
     }
-  }, [actionData?.products, actionData?.topic, actionData?.topic_status]);
+  }, [
+    actionData?.products,
+    actionData?.status,
+    actionData?.topic,
+    actionData?.topic_status,
+  ]);
 
   const isCancelDisabled = !file;
   const isImportDisbled = !file;
@@ -187,7 +212,8 @@ export default function Import() {
             </div>
           </BlockStack>
         </Card>
-        {actionData?.topic === TOPIC.VALIDATE &&
+        {actionData?.status === "success" &&
+          actionData?.topic === TOPIC.VALIDATE &&
           actionData?.topic_status === RESULT.SUCCESS && (
             <Banner title="Import Preview" tone="info">
               <DataTable
