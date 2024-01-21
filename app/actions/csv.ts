@@ -1,11 +1,10 @@
-import invariant from "tiny-invariant";
-import {
+import type {
   UpdateProductReviewsInput,
   UpdateProductReviewsResult,
-  createMetafieldHandler,
 } from "~/api/metafield";
+import { createMetafieldHandler } from "~/api/metafield";
 import { createProductHandler } from "~/api/product";
-import { ProductReview } from "~/components/product-review-form";
+import type { ProductReview } from "~/components/product-review-form";
 import { generateUUID } from "~/utils/generate-uuid";
 
 export type CSVRow = {
@@ -207,6 +206,7 @@ export const createActionHandlers = (admin: any) => {
     }
 
     const importErrors: string[] = [];
+    const importResults: string[] = [];
     for (const key of keys) {
       const reviewsToImport = constructProductReviews(products[key]);
       const error = await handleProductUpdate(
@@ -216,6 +216,8 @@ export const createActionHandlers = (admin: any) => {
       );
       if (error) {
         importErrors.push(error);
+      } else {
+        importResults.push(`Successfully imported reviews for '${key}'`);
       }
     }
 
@@ -229,6 +231,8 @@ export const createActionHandlers = (admin: any) => {
 
     return {
       status: "success",
+      suess: "Upload Success",
+      details: importResults,
     };
 
     // You can add a success return here if needed

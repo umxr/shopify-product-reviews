@@ -59,58 +59,51 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     uploadHandler
   );
 
+  if (request.method !== RequestMethod.POST) {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  const file = formData.get("csv") as File;
+  if (!file || file.type !== "text/csv") {
+    return json({ error: "Invalid file type." }, { status: 400 });
+  }
+
+  const validationResults = await parseAndValidateCSV(file);
+  if (validationResults.status === "error") {
+    return json({
+      ...validationResults,
+      topic: TOPIC.VALIDATE,
+      topic_status: RESULT.ERROR,
+    });
+  }
+
   const url = new URL(request.url);
-  const searchParams = url.searchParams;
-  const valid = searchParams.get("valid") === "true";
+  const hasPrevalidationOccured = url.searchParams.get("valid") === "true";
+
+  if (!hasPrevalidationOccured) {
+    return json({
+      ...validationResults,
+      topic: TOPIC.VALIDATE,
+      topic_status: RESULT.SUCCESS,
+    });
+  }
 
   const { uploadProducts } = createActionHandlers(admin);
+  const uploadResult = await uploadProducts(validationResults.products_raw);
 
-  switch (request.method) {
-    case RequestMethod.POST:
-      const file = formData.get("csv") as File;
-
-      if (!valid) {
-        if (file && file.type !== "text/csv") {
-          return json({ error: "Invalid file type." }, { status: 400 });
-        }
-
-        const result = await parseAndValidateCSV(file);
-        if (result.status === "error") {
-          return json({
-            ...result,
-            topic: TOPIC.VALIDATE,
-            topic_status: RESULT.ERROR,
-          });
-        }
-        return json({
-          ...result,
-          topic: TOPIC.VALIDATE,
-          topic_status: RESULT.SUCCESS,
-        });
-      }
-
-      const validationResults = await parseAndValidateCSV(file);
-      if (validationResults.status === "success") {
-        const result = await uploadProducts(validationResults.products_raw);
-
-        if (result.status === "error") {
-          return json({
-            ...result,
-            topic: TOPIC.IMPORT,
-            topic_status: RESULT.ERROR,
-          });
-        }
-
-        return json({
-          status: "success",
-          topic: TOPIC.IMPORT,
-          topic_status: RESULT.SUCCESS,
-        });
-      }
-
-    default:
-      return new Response("Method not allowed", { status: 405 });
+  if (uploadResult.status === "error") {
+    return json({
+      ...uploadResult,
+      topic: TOPIC.IMPORT,
+      topic_status: RESULT.ERROR,
+    });
   }
+
+  return json({
+    status: "success",
+    topic: TOPIC.IMPORT,
+    topic_status: RESULT.SUCCESS,
+  });
 };
 
 export default function Import() {
