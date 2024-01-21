@@ -52,6 +52,7 @@ export const parseAndValidateCSV = async (file: File) => {
   const rows = text.split("\n");
   let validationErrors: string[] = [];
   let isHeaderValid = true;
+  let groupedData: Record<string, Record<string, any>> = {};
 
   // Check headers
   const headers = rows[0].split(",");
@@ -62,7 +63,7 @@ export const parseAndValidateCSV = async (file: File) => {
     validationErrors.push(`Missing headers: ${missingHeaders.join(", ")}`);
     isHeaderValid = false;
   } else {
-    // Validate each row
+    // Validate and group each row
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i].split(",");
       const rowData = row.reduce((acc, current, index) => {
@@ -71,8 +72,13 @@ export const parseAndValidateCSV = async (file: File) => {
       }, {});
 
       const rowIsValid = validateCSVRow(rowData, i + 1, validationErrors);
-      if (!rowIsValid) {
-        console.log(`Row ${i + 1} is invalid.`);
+      if (rowIsValid) {
+        // Group by handle
+        const handle = rowData.handle;
+        if (!groupedData[handle]) {
+          groupedData[handle] = [];
+        }
+        groupedData[handle].push(rowData);
       }
     }
   }
@@ -87,5 +93,23 @@ export const parseAndValidateCSV = async (file: File) => {
 
   return {
     status: "success",
+    products: groupedData,
   };
+};
+
+export const parseProductResult = (
+  products: Record<string, Record<string, any>>
+) => {
+  const results: Record<string, any>[] = [];
+  Object.keys(products).forEach((handle) => {
+    const product = {
+      handle,
+      name: products[handle][0].name,
+      message: products[handle][0].message,
+      rating: products[handle][0].rating,
+    };
+    results.push(product);
+  });
+
+  return results;
 };

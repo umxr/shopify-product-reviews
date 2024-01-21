@@ -15,12 +15,22 @@ import {
   Button,
   ButtonGroup,
   Banner,
+  DataTable,
 } from "@shopify/polaris";
 import { UndoMajor, NoteMinor, TickMinor } from "@shopify/polaris-icons";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 import { useActionData, useSubmit } from "@remix-run/react";
-import { parseAndValidateCSV } from "~/actions/csv";
+import { parseAndValidateCSV, parseProductResult } from "~/actions/csv";
+
+const TOPIC = {
+  VALIDATE: "VALIDATE",
+} as const;
+
+const RESULT = {
+  SUCCESS: "SUCCESS",
+  ERROR: "ERROR",
+} as const;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const uploadHandler = unstable_createFileUploadHandler();
@@ -36,13 +46,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   const result = await parseAndValidateCSV(file);
-  return json(result);
+  if (result.status === "error") {
+    return json({
+      ...result,
+      topic: TOPIC.VALIDATE,
+      topic_status: RESULT.ERROR,
+    });
+  }
+  return json({
+    products: parseProductResult(result.products),
+    topic: TOPIC.VALIDATE,
+    topic_status: RESULT.SUCCESS,
+  });
 };
 
 export default function Import() {
   const submit = useSubmit();
   const actionData = useActionData();
   const [file, setFile] = useState<File>();
+  const [validated, setValidated] = useState(false);
 
   const handleDropZoneDrop = useCallback(
     (_dropFiles: File[], acceptedFiles: File[], _rejectedFiles: File[]) => {
@@ -59,7 +81,7 @@ export default function Import() {
     []
   );
 
-  const onFileValidate = useCallback(() => {
+  const handleFileValidate = useCallback(() => {
     const formData = new FormData();
     formData.append("csv", file as File);
     submit(formData, {
@@ -68,6 +90,10 @@ export default function Import() {
     });
     shopify.toast.show("Uploading file...");
   }, [file, submit]);
+
+  const handleFileImport = useCallback(() => {
+    !validated ? handleFileValidate() : console.log("importing");
+  }, [handleFileValidate, validated]);
 
   const onFileClear = useCallback(() => {
     setFile(undefined);
@@ -89,10 +115,21 @@ export default function Import() {
     </BlockStack>
   );
 
+  useEffect(() => {
+    if (
+      actionData?.topic === TOPIC.VALIDATE &&
+      actionData?.topic_status === RESULT.SUCCESS
+    ) {
+      setValidated(true);
+      console.log("passed validation");
+      console.log(actionData?.products);
+    }
+  }, [actionData?.products, actionData?.topic, actionData?.topic_status]);
+
   const isCancelDisabled = !file;
   const isImportDisbled = !file;
 
-  console.log(actionData);
+  console.log("actionData", actionData);
 
   return (
     <Page
@@ -109,6 +146,15 @@ export default function Import() {
               <p>{actionData?.details[0]}</p>
             </Banner>
           )}
+        {actionData?.status === "error" && actionData?.details?.length > 1 && (
+          <Banner title={actionData.error} tone="critical">
+            <DataTable
+              columnContentTypes={["text"]}
+              headings={["Error"]}
+              rows={actionData.details.map((detail) => [detail])}
+            />
+          </Banner>
+        )}
         <Card roundedAbove="sm">
           <BlockStack gap="400">
             <DropZone onDrop={handleDropZoneDrop} variableHeight>
@@ -129,11 +175,11 @@ export default function Import() {
                 >
                   Clear
                 </Button>
-                <Button onClick={onFileValidate}>Validate</Button>
                 <Button
                   icon={TickMinor}
                   variant="primary"
                   disabled={isImportDisbled}
+                  onClick={handleFileImport}
                 >
                   Import
                 </Button>
@@ -141,6 +187,23 @@ export default function Import() {
             </div>
           </BlockStack>
         </Card>
+        {actionData?.topic === TOPIC.VALIDATE &&
+          actionData?.topic_status === RESULT.SUCCESS && (
+            <Banner title="Import Preview" tone="info">
+              <DataTable
+                columnContentTypes={["text", "text", "text", "text"]}
+                headings={["Handle", "Name", "Message", "Rating"]}
+                rows={actionData?.products
+                  .slice(0, 3)
+                  .map((product) => [
+                    product.handle,
+                    product.name,
+                    product.message,
+                    product.rating,
+                  ])}
+              />
+            </Banner>
+          )}
       </BlockStack>
     </Page>
   );
