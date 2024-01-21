@@ -22,8 +22,9 @@ import { useState, useCallback, useEffect } from "react";
 
 import { useActionData, useSearchParams, useSubmit } from "@remix-run/react";
 import type { ParsedProduct } from "~/actions/csv";
-import { parseAndValidateCSV, parseProductResult } from "~/actions/csv";
+import { createActionHandlers, parseAndValidateCSV } from "~/actions/csv";
 import { RequestMethod } from "~/actions";
+import { authenticate } from "~/shopify.server";
 
 const TOPIC = {
   VALIDATE: "VALIDATE",
@@ -51,6 +52,7 @@ type ActionDataSuccess = {
 type ActionData = ActionDataError | ActionDataSuccess;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const { admin } = await authenticate.admin(request);
   const uploadHandler = unstable_createFileUploadHandler();
   const formData = await unstable_parseMultipartFormData(
     request,
@@ -61,8 +63,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const searchParams = url.searchParams;
   const valid = searchParams.get("valid") === "true";
 
-  console.log("searchParams", searchParams);
-  console.log("valid", valid);
+  const { uploadProducts } = createActionHandlers(admin);
 
   switch (request.method) {
     case RequestMethod.POST:
@@ -88,11 +89,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         });
       }
 
-      return json({
-        status: "success",
-        topic: TOPIC.IMPORT,
-        topic_status: RESULT.SUCCESS,
-      });
+      const validationResults = await parseAndValidateCSV(file);
+      if (validationResults.status === "success") {
+        const result = await uploadProducts(validationResults.products_raw);
+
+        if (result.status === "error") {
+          return json({
+            ...result,
+            topic: TOPIC.IMPORT,
+            topic_status: RESULT.ERROR,
+          });
+        }
+
+        return json({
+          status: "success",
+          topic: TOPIC.IMPORT,
+          topic_status: RESULT.SUCCESS,
+        });
+      }
 
     default:
       return new Response("Method not allowed", { status: 405 });
@@ -260,12 +274,14 @@ export default function Import() {
             <DataTable
               columnContentTypes={["text", "text", "text", "text"]}
               headings={["Handle", "Name", "Message", "Rating"]}
-              rows={importPreviewProducts.map((product) => [
-                product.handle,
-                product.name,
-                product.message,
-                product.rating,
-              ])}
+              rows={importPreviewProducts
+                .slice(0, 3)
+                .map((product) => [
+                  product.handle,
+                  product.name,
+                  product.message,
+                  product.rating,
+                ])}
             />
           </Banner>
         )}

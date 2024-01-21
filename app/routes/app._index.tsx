@@ -25,6 +25,7 @@ import { useCallback, useEffect } from "react";
 import {
   BACKWARD_PAGINATION_QUERY,
   FORWARD_PAGINATION_QUERY,
+  METAFIELD_DEFINITION_MUTATION,
   METAFIELD_DEFINITION_QUERY,
 } from "~/gql/product";
 
@@ -98,22 +99,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const type = formData.get("type");
 
   if (type === "create_metafield_definition") {
-    const mutation = `mutation createMetafieldDefinition {
-      metafieldDefinitionCreate(
-        definition: {namespace: "hydrogen_reviews", key: "product_reviews", name: "Product Reviews", ownerType: PRODUCT, type: "json"}
-      ) {
-        createdDefinition {
-          id
-        }
-        userErrors {
-          field
-          message
-        }
-      }
-    }`;
-
     try {
-      await admin.graphql(mutation);
+      await admin.graphql(METAFIELD_DEFINITION_MUTATION);
       return json({
         ok: true,
       });

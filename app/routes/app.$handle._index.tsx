@@ -23,31 +23,30 @@ import {
 import { StarRating } from "~/components/star-rating";
 import type { ProductReview } from "~/components/product-review-form";
 import { ProductReviewForm } from "~/components/product-review-form";
-import { GET_PRODUCT_QUERY } from "~/gql/product";
 import { createActionHandlers } from "~/actions/product";
 import { RequestMethod } from "~/actions";
 import { ExportMinor } from "@shopify/polaris-icons";
+import { createProductHandler } from "~/api/product";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const handle = params.handle;
+  if (!handle) {
+    console.error("Missing handle for GET request");
+    return json(
+      {
+        error: "Missing handle for GET request",
+      },
+      {
+        status: 404,
+      }
+    );
+  }
 
   try {
-    const productRequest = await admin.graphql(GET_PRODUCT_QUERY, {
-      variables: {
-        handle,
-      },
-    });
-
-    const productJson = await productRequest.json();
-    const metafield = productJson.data.productByHandle?.metafield ?? null;
-    delete productJson.data.productByHandle.metafield;
-
-    return json({
-      product: productJson.data.productByHandle,
-      metafield,
-      reviews: metafield ? JSON.parse(metafield.value) : [],
-    });
+    const { getProductByHandle } = createProductHandler(admin);
+    const result = await getProductByHandle(handle);
+    return json(result);
   } catch (error) {
     console.error("Failed to load product", error);
     return json(

@@ -1,4 +1,5 @@
 import { json } from "@remix-run/node";
+import { createMetafieldHandler } from "~/api/metafield";
 import { PRODUCT_METAFIELD_MUTATION } from "~/gql/product";
 
 export const createActionHandlers = (admin) => {
@@ -15,10 +16,10 @@ export const createActionHandlers = (admin) => {
     }
 
     try {
+      const { updateProductReviews } = createMetafieldHandler(admin);
       const { name, message, rating, id, productId, metafieldId } =
         Object.fromEntries(formData);
-
-      const newReviewList = JSON.stringify([
+      const newReviewList = [
         ...reviews,
         {
           name,
@@ -26,37 +27,11 @@ export const createActionHandlers = (admin) => {
           rating,
           id,
         },
-      ]);
-
-      const variables =
-        metafieldId !== "undefined"
-          ? {
-              input: {
-                id: productId,
-                metafields: [
-                  {
-                    id: metafieldId,
-                    value: newReviewList,
-                  },
-                ],
-              },
-            }
-          : {
-              input: {
-                id: productId,
-                metafields: [
-                  {
-                    namespace: "hydrogen_reviews",
-                    key: "product_reviews",
-                    value: newReviewList,
-                    type: "json",
-                  },
-                ],
-              },
-            };
-
-      await admin.graphql(PRODUCT_METAFIELD_MUTATION, {
-        variables,
+      ];
+      await updateProductReviews({
+        metafieldId: metafieldId as string,
+        productId: productId as string,
+        reviews: newReviewList,
       });
       return json({
         action: "create",

@@ -17,7 +17,7 @@ mutation updateProduct($input: ProductInput!) {
 }`;
 
 export const GET_PRODUCT_QUERY = `#graphql
-query getProduct($handle: String!) {
+query getProductByHandle($handle: String!) {
   productByHandle(handle: $handle) {
     id
     title
@@ -32,7 +32,7 @@ query getProduct($handle: String!) {
 }`;
 
 export const FORWARD_PAGINATION_QUERY = `#graphql
-  query getProducts($numProducts: Int!, $cursor: String) {
+  query getProductsByFowardPagination($numProducts: Int!, $cursor: String) {
     products (first: $numProducts, after: $cursor) {
       edges {
         node {
@@ -58,7 +58,7 @@ export const FORWARD_PAGINATION_QUERY = `#graphql
 `;
 
 export const BACKWARD_PAGINATION_QUERY = `#graphql
-  query getProducts($numProducts: Int!, $cursor: String) {
+  query getProductsByBackwardPagination($numProducts: Int!, $cursor: String) {
     products (last: $numProducts, before: $cursor) {
       edges {
         node {
@@ -84,7 +84,7 @@ export const BACKWARD_PAGINATION_QUERY = `#graphql
 `;
 
 export const METAFIELD_DEFINITION_QUERY = `#graphql
-  {
+  query getMetafieldDefinition{
     metafieldDefinitions(namespace: "hydrogen_reviews", ownerType: PRODUCT, first: 1) {
       edges {
         node {
@@ -97,3 +97,18 @@ export const METAFIELD_DEFINITION_QUERY = `#graphql
     }
   }
 `;
+
+export const METAFIELD_DEFINITION_MUTATION = `#graphql
+mutation createMetafieldDefinition {
+  metafieldDefinitionCreate(
+    definition: {namespace: "hydrogen_reviews", key: "product_reviews", name: "Product Reviews", ownerType: PRODUCT, type: "json"}
+  ) {
+    createdDefinition {
+      id
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}`;

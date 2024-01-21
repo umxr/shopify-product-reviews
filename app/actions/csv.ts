@@ -1,3 +1,13 @@
+import invariant from "tiny-invariant";
+import {
+  UpdateProductReviewsInput,
+  UpdateProductReviewsResult,
+  createMetafieldHandler,
+} from "~/api/metafield";
+import { createProductHandler } from "~/api/product";
+import { ProductReview } from "~/components/product-review-form";
+import { generateUUID } from "~/utils/generate-uuid";
+
 export type CSVRow = {
   handle: string;
   name: string;
@@ -77,7 +87,24 @@ export const validateCSVRow = (
   return isValid;
 };
 
-export const parseAndValidateCSV = async (file: File) => {
+type ParseAndValidateCSVInput = File;
+type ParseAndValidateCSVErrorResult = {
+  status: "error";
+  error: string;
+  details: string[];
+};
+type ParseAndValidateCSVSuccessResult = {
+  status: "success";
+  products: ParsedProduct[];
+  products_raw: Record<string, CSVRow[]>;
+};
+type ParseAndValidateCSVResult =
+  | ParseAndValidateCSVErrorResult
+  | ParseAndValidateCSVSuccessResult;
+
+export const parseAndValidateCSV = async (
+  file: ParseAndValidateCSVInput
+): Promise<ParseAndValidateCSVResult> => {
   const text = await file.text();
   const rows = text.split("\n");
   let validationErrors: string[] = [];
@@ -123,6 +150,91 @@ export const parseAndValidateCSV = async (file: File) => {
 
   return {
     status: "success",
-    products: parseProductResult(groupedData).slice(0, 3),
+    products: parseProductResult(groupedData),
+    products_raw: groupedData,
+  };
+};
+
+const constructProductReviews = (
+  products: ParsedProduct[]
+): ProductReview[] => {
+  const reviews: ProductReview[] = [];
+  products.forEach((product) => {
+    const review: ProductReview = {
+      id: generateUUID(),
+      message: product.message,
+      name: product.name,
+      rating: parseInt(product.rating),
+    };
+    reviews.push(review);
+  });
+
+  return reviews;
+};
+
+export const createActionHandlers = (admin: any) => {
+  const getProductByHandle = createProductHandler(admin).getProductByHandle;
+  const updateProductReviews =
+    createMetafieldHandler(admin).updateProductReviews;
+  const handleProductUpdate = async (
+    key: string,
+    reviewsToImport: ProductReview[],
+    updateProductReviews: (
+      input: UpdateProductReviewsInput
+    ) => Promise<UpdateProductReviewsResult>
+  ) => {
+    try {
+      const { metafield, product, reviews } = await getProductByHandle(key);
+      await updateProductReviews({
+        metafieldId: metafield?.id as string,
+        productId: product?.id as string,
+        reviews: [...reviews, ...reviewsToImport],
+      });
+      return null;
+    } catch (error) {
+      return `Error updating product with handle '${key}'`;
+    }
+  };
+
+  const uploadProducts = async (products: Record<string, CSVRow[]>) => {
+    const keys = Object.keys(products);
+    if (keys.length === 0) {
+      return {
+        status: "error",
+        error: "Upload Errors",
+        details: ["No products to upload."],
+      };
+    }
+
+    const importErrors: string[] = [];
+    for (const key of keys) {
+      const reviewsToImport = constructProductReviews(products[key]);
+      const error = await handleProductUpdate(
+        key,
+        reviewsToImport,
+        updateProductReviews
+      );
+      if (error) {
+        importErrors.push(error);
+      }
+    }
+
+    if (importErrors.length > 0) {
+      return {
+        status: "error",
+        error: "Upload Errors",
+        details: importErrors,
+      };
+    }
+
+    return {
+      status: "success",
+    };
+
+    // You can add a success return here if needed
+  };
+
+  return {
+    uploadProducts,
   };
 };
