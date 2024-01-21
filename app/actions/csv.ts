@@ -1,10 +1,24 @@
+type CSVRow = {
+  handle: string;
+  name: string;
+  message: string;
+  rating: string;
+};
+
+type ParsedProduct = {
+  handle: string;
+  name: string;
+  message: string;
+  rating: string;
+};
+
 export const expectedHeaders = ["handle", "name", "message", "rating"];
 
 export const validateCSVRow = (
-  row: any,
+  row: CSVRow,
   rowIndex: number,
   validationErrors: string[]
-) => {
+): boolean => {
   console.log("row", row);
   let isValid = true;
 
@@ -52,7 +66,7 @@ export const parseAndValidateCSV = async (file: File) => {
   const rows = text.split("\n");
   let validationErrors: string[] = [];
   let isHeaderValid = true;
-  let groupedData: Record<string, Record<string, any>> = {};
+  let groupedData: Record<string, CSVRow[]> = {};
 
   // Check headers
   const headers = rows[0].split(",");
@@ -98,9 +112,9 @@ export const parseAndValidateCSV = async (file: File) => {
 };
 
 export const parseProductResult = (
-  products: Record<string, Record<string, any>>
-) => {
-  const results: Record<string, any>[] = [];
+  products: Record<string, CSVRow[]>
+): ParsedProduct[] => {
+  const results: ParsedProduct[] = [];
   Object.keys(products).forEach((handle) => {
     const product = {
       handle,
