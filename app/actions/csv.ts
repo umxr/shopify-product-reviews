@@ -14,12 +14,28 @@ export type ParsedProduct = {
 
 export const expectedHeaders = ["handle", "name", "message", "rating"];
 
+export const parseProductResult = (
+  products: Record<string, CSVRow[]>
+): ParsedProduct[] => {
+  const results: ParsedProduct[] = [];
+  Object.keys(products).forEach((handle) => {
+    const product = {
+      handle,
+      name: products[handle][0].name,
+      message: products[handle][0].message,
+      rating: products[handle][0].rating,
+    };
+    results.push(product);
+  });
+
+  return results;
+};
+
 export const validateCSVRow = (
   row: CSVRow,
   rowIndex: number,
   validationErrors: string[]
 ): boolean => {
-  console.log("row", row);
   let isValid = true;
 
   // Validate Handle (dash-separated format)
@@ -107,23 +123,6 @@ export const parseAndValidateCSV = async (file: File) => {
 
   return {
     status: "success",
-    products: groupedData,
+    products: parseProductResult(groupedData).slice(0, 3),
   };
-};
-
-export const parseProductResult = (
-  products: Record<string, CSVRow[]>
-): ParsedProduct[] => {
-  const results: ParsedProduct[] = [];
-  Object.keys(products).forEach((handle) => {
-    const product = {
-      handle,
-      name: products[handle][0].name,
-      message: products[handle][0].message,
-      rating: products[handle][0].rating,
-    };
-    results.push(product);
-  });
-
-  return results;
 };

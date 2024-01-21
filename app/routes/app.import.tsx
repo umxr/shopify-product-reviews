@@ -20,12 +20,14 @@ import {
 import { UndoMajor, NoteMinor, TickMinor } from "@shopify/polaris-icons";
 import { useState, useCallback, useEffect } from "react";
 
-import { useActionData, useSubmit } from "@remix-run/react";
+import { useActionData, useSearchParams, useSubmit } from "@remix-run/react";
 import type { ParsedProduct } from "~/actions/csv";
 import { parseAndValidateCSV, parseProductResult } from "~/actions/csv";
+import { RequestMethod } from "~/actions";
 
 const TOPIC = {
   VALIDATE: "VALIDATE",
+  IMPORT: "IMPORT",
 } as const;
 
 const RESULT = {
@@ -55,25 +57,46 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     uploadHandler
   );
 
-  const file = formData.get("csv") as File;
+  const url = new URL(request.url);
+  const searchParams = url.searchParams;
+  const valid = searchParams.get("valid") === "true";
 
-  if (file && file.type !== "text/csv") {
-    return json({ error: "Invalid file type." }, { status: 400 });
-  }
+  console.log("searchParams", searchParams);
+  console.log("valid", valid);
 
-  const result = await parseAndValidateCSV(file);
-  if (result.status === "error") {
-    return json({
-      ...result,
-      topic: TOPIC.VALIDATE,
-      topic_status: RESULT.ERROR,
-    });
+  switch (request.method) {
+    case RequestMethod.POST:
+      const file = formData.get("csv") as File;
+
+      if (!valid) {
+        if (file && file.type !== "text/csv") {
+          return json({ error: "Invalid file type." }, { status: 400 });
+        }
+
+        const result = await parseAndValidateCSV(file);
+        if (result.status === "error") {
+          return json({
+            ...result,
+            topic: TOPIC.VALIDATE,
+            topic_status: RESULT.ERROR,
+          });
+        }
+        return json({
+          ...result,
+          topic: TOPIC.VALIDATE,
+          topic_status: RESULT.SUCCESS,
+        });
+      }
+
+      return json({
+        status: "success",
+        topic: TOPIC.IMPORT,
+        topic_status: RESULT.SUCCESS,
+      });
+
+    default:
+      return new Response("Method not allowed", { status: 405 });
   }
-  return json({
-    products: parseProductResult(result.products),
-    topic: TOPIC.VALIDATE,
-    topic_status: RESULT.SUCCESS,
-  });
 };
 
 export default function Import() {
@@ -82,8 +105,11 @@ export default function Import() {
     | ActionDataError
     | ActionDataSuccess
     | undefined;
+  const [searchParams, setSearchParams] = useSearchParams();
   const [file, setFile] = useState<File>();
-  const [isImportValid, setImportValid] = useState(false);
+  const [importPreviewProducts, setImportPreviewProducts] = useState<
+    ParsedProduct[]
+  >([]);
 
   const handleDropZoneDrop = useCallback(
     (_dropFiles: File[], acceptedFiles: File[], _rejectedFiles: File[]) => {
@@ -107,12 +133,27 @@ export default function Import() {
       method: "POST",
       encType: "multipart/form-data",
     });
-    shopify.toast.show("Uploading file...");
+    shopify.toast.show("Uploading file...", {
+      duration: 3000,
+    });
   }, [file, submit]);
 
   const handleFileImport = useCallback(() => {
-    !isImportValid ? handleFileValidate() : console.log("importing");
-  }, [handleFileValidate, isImportValid]);
+    const formData = new FormData();
+    formData.append("csv", file as File);
+    submit(formData, {
+      method: "POST",
+      encType: "multipart/form-data",
+    });
+    shopify.toast.show("Importing products...", {
+      duration: 3000,
+    });
+  }, [file, submit]);
+
+  const runFileImport = useCallback(() => {
+    const isValid = searchParams.get("valid") === "true";
+    isValid ? handleFileImport() : handleFileValidate();
+  }, [handleFileImport, handleFileValidate, searchParams]);
 
   const onFileClear = useCallback(() => {
     setFile(undefined);
@@ -140,21 +181,23 @@ export default function Import() {
       actionData?.topic === TOPIC.VALIDATE &&
       actionData?.topic_status === RESULT.SUCCESS
     ) {
-      setImportValid(true);
-      console.log("passed validation");
-      console.log(actionData?.products);
+      setImportPreviewProducts(actionData?.products);
+      const params = new URLSearchParams();
+      params.set("valid", "true");
+      setSearchParams(params);
     }
   }, [
     actionData?.products,
     actionData?.status,
     actionData?.topic,
     actionData?.topic_status,
+    setSearchParams,
   ]);
 
   const isCancelDisabled = !file;
   const isImportDisbled = !file;
 
-  console.log("actionData", actionData);
+  console.log(actionData);
 
   return (
     <Page
@@ -204,7 +247,7 @@ export default function Import() {
                   icon={TickMinor}
                   variant="primary"
                   disabled={isImportDisbled}
-                  onClick={handleFileImport}
+                  onClick={runFileImport}
                 >
                   Import
                 </Button>
@@ -212,24 +255,20 @@ export default function Import() {
             </div>
           </BlockStack>
         </Card>
-        {actionData?.status === "success" &&
-          actionData?.topic === TOPIC.VALIDATE &&
-          actionData?.topic_status === RESULT.SUCCESS && (
-            <Banner title="Import Preview" tone="info">
-              <DataTable
-                columnContentTypes={["text", "text", "text", "text"]}
-                headings={["Handle", "Name", "Message", "Rating"]}
-                rows={actionData?.products
-                  .slice(0, 3)
-                  .map((product) => [
-                    product.handle,
-                    product.name,
-                    product.message,
-                    product.rating,
-                  ])}
-              />
-            </Banner>
-          )}
+        {importPreviewProducts.length > 0 && (
+          <Banner title="Import Preview" tone="info">
+            <DataTable
+              columnContentTypes={["text", "text", "text", "text"]}
+              headings={["Handle", "Name", "Message", "Rating"]}
+              rows={importPreviewProducts.map((product) => [
+                product.handle,
+                product.name,
+                product.message,
+                product.rating,
+              ])}
+            />
+          </Banner>
+        )}
       </BlockStack>
     </Page>
   );
