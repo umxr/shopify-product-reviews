@@ -22,73 +22,44 @@ import { flattenEdges } from "~/utils/flattenEdges";
 import type { Product } from "~/types/product";
 import type { Tone } from "@shopify/polaris/build/ts/src/components/Badge";
 import { useCallback, useEffect } from "react";
-import {
-  BACKWARD_PAGINATION_QUERY,
-  FORWARD_PAGINATION_QUERY,
-  METAFIELD_DEFINITION_MUTATION,
-  METAFIELD_DEFINITION_QUERY,
-} from "~/gql/product";
+import { METAFIELD_DEFINITION_MUTATION } from "~/gql/product";
+import { createAppHandler, formatProductsData } from "~/api/app";
+import { createMetafieldHandler } from "~/api/metafield";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
   const url = new URL(request.url);
-  const searchParams = url.searchParams;
 
-  // Pagination parameters
-  const numProductsForward = Number(searchParams.get("first")) || 10;
-  const cursorForward = searchParams.get("after") || null;
-  const numProductsBackward = Number(searchParams.get("last")) || 10;
-  const cursorBackward = searchParams.get("before") || null;
-
-  let query, variables;
-  if (cursorForward) {
-    query = FORWARD_PAGINATION_QUERY;
-    variables = { numProducts: numProductsForward, cursor: cursorForward };
-  } else if (cursorBackward) {
-    query = BACKWARD_PAGINATION_QUERY;
-    variables = { numProducts: numProductsBackward, cursor: cursorBackward };
-  } else {
-    // Default to forward pagination with no cursor
-    query = FORWARD_PAGINATION_QUERY;
-    variables = { numProducts: numProductsForward, cursor: null };
-  }
+  const { getPaginationQuery, graphqlQuery } = createAppHandler(admin);
+  const { getMetafieldDefinition } = createMetafieldHandler(admin);
+  const { query, variables } = getPaginationQuery(url.searchParams);
 
   try {
-    const response = await admin.graphql(query, { variables });
-    const metafieldDefinitionResponse = await admin.graphql(
-      METAFIELD_DEFINITION_QUERY
-    );
-    const productsData = await response.json();
-    const metafieldDefinitionData = await metafieldDefinitionResponse.json();
-    const pagination = productsData.data.products.pageInfo;
-    const formattedProducts = flattenEdges(
-      productsData.data.products
-    ) as Product[];
-    const formattedProductsWithMetafields = formattedProducts.map((product) => {
-      const metafield = product.metafield
-        ? JSON.parse(product.metafield.value)
-        : [];
-      return {
-        ...product,
-        metafield,
-      };
+    const productsResponse = await graphqlQuery({
+      query,
+      variables,
     });
+    const metafields = await getMetafieldDefinition();
 
-    const hasMetafieldDefinition =
-      metafieldDefinitionData.data?.metafieldDefinitions.edges.length > 0;
+    const productsData = await productsResponse.json();
+
+    const pagination = productsData.data.products.pageInfo;
+    const formattedProducts = formatProductsData(
+      flattenEdges(productsData.data.products)
+    );
 
     return json({
-      products: formattedProductsWithMetafields,
+      products: formattedProducts,
       pagination: {
         ...pagination,
-        first: numProductsForward,
-        last: numProductsBackward,
+        first: variables.numProducts,
+        last: variables.numProducts,
       },
       session,
-      hasMetafieldDefinition,
+      hasMetafieldDefinition: metafields && metafields.length > 0,
     });
   } catch (error) {
-    console.log("error", error);
+    console.error("Error fetching products", error);
     throw new Response("Error fetching products", { status: 500 });
   }
 };

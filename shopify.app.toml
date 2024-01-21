@@ -2,7 +2,7 @@
 
 name = "hydrogen-reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://baker-productive-contributor-viewing.trycloudflare.com"
+application_url = "https://forgotten-arrest-labour-ext.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://baker-productive-contributor-viewing.trycloudflare.com/auth/callback",
-  "https://baker-productive-contributor-viewing.trycloudflare.com/auth/shopify/callback",
-  "https://baker-productive-contributor-viewing.trycloudflare.com/api/auth/callback"
+  "https://forgotten-arrest-labour-ext.trycloudflare.com/auth/callback",
+  "https://forgotten-arrest-labour-ext.trycloudflare.com/auth/shopify/callback",
+  "https://forgotten-arrest-labour-ext.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
