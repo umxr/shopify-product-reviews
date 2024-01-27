@@ -1,18 +1,6 @@
 {% assign product_reference = block.settings.product %}
 {% assign product_reviews = product_reference.metafields.hydrogen_reviews.product_reviews %}
-{% assign product_id = product_reference.id %}
-{% assign colour = block.settings.colour %}
-{% assign size = block.settings.size %}
 {% assign random_number = "now" | date: "%N" | modulo: 100 %}
-
-<div style="display:none;" class="hydrogen_reviews__markup">
-  <div class="hydrogen_reviews__markup--star-fill">
-    <span class="hydrogen_reviews__star">
-      {% render 'icon-star-fill', fill: colour, height: size, width: size  %}
-    </span>
-  </div>
-</div>
-<div class="hydrogen_reviews__container-{{ random_number }}"></div>
 
 <style>
   .hydrogen_reviews__container-{{ random_number }} {
@@ -22,6 +10,15 @@
     align-items: center;
   }
 </style>
+
+<div style="display:none;" class="hydrogen_reviews__markup">
+  <div class="hydrogen_reviews__markup--star-fill">
+    <span class="hydrogen_reviews__star">
+      {% render 'icon-star-fill', fill: block.settings.colour, height: block.settings.size, width: block.settings.size  %}
+    </span>
+  </div>
+</div>
+<div class="hydrogen_reviews__container-{{ random_number }}"></div>
 
 <script id="product_reviews" type="application/json">{{ product_reviews }}</script>
 <script>
