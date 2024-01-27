@@ -1,0 +1,66 @@
+{% assign form_id = "now" | date: "%N" | modulo: 100 %}
+
+<form class="hydrogen_reviews__form-{{ form_id }}">
+  <div>
+    <label for="name">Name</label>
+    <input type="text" name="name" id="name" required />
+  </div>
+  <div>
+    <label for="rating">Rating</label>
+    <select name="rating" required>
+      <option value="1">1 Star</option>
+      <option value="2">2 Stars</option>
+      <option value="3">3 Stars</option>
+      <option value="4">4 Stars</option>
+      <option value="5">5 Stars</option>
+    </select>
+  </div>
+  <div>
+    <label for="message">Message</label>
+    <textarea name="message" id="message" rows="4" required></textarea>
+  </div>
+  <div>
+    <button type="submit">
+      Submit
+    </button>
+  </div>
+</form>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector(".hydrogen_reviews__form-{{ form_id }}")
+    if (!form) return;
+    console.log("form", form);
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const submitResponse = await fetch("/apps/hydrogen-reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(Object.fromEntries(formData))
+      });
+      const submitResponseJson = await submitResponse.json();
+      console.log(submitResponseJson);
+    }
+
+    form.addEventListener("submit", handleSubmit);
+
+  })
+</script>
+
+{% schema %}
+{
+  "name": "Review Form",
+  "target": "section",
+  "settings": [
+    { 
+      "type": "product", 
+      "id": "product", 
+      "label": "product", 
+      "autofill": true 
+    }
+  ]
+}
+{% endschema %}
