@@ -1,0 +1,73 @@
+{% assign product_reference = block.settings.product %}
+{% assign product_reviews = product_reference.metafields.hydrogen_reviews.product_reviews %}
+{% assign product_id = product_reference.id %}
+{% assign colour = block.settings.colour %}
+{% assign size = block.settings.size %}
+{% assign random_number = "now" | date: "%N" | modulo: 100 %}
+
+<div style="display:none;" class="hydrogen_reviews__markup">
+  <div class="hydrogen_reviews__markup--star-fill">
+    <span class="hydrogen_reviews__star">
+      {% render 'icon-star-fill', fill: colour, height: size, width: size  %}
+    </span>
+  </div>
+</div>
+<div class="hydrogen_reviews__container-{{ random_number }}"></div>
+
+<style>
+  .hydrogen_reviews__container-{{ random_number }} {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+</style>
+
+<script id="product_reviews" type="application/json">{{ product_reviews }}</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const product_reviews = JSON.parse(document.getElementById('product_reviews').innerHTML || "[]");
+    const container = document.querySelector('.hydrogen_reviews__container-{{ random_number }}');
+    if (!container || product_reviews.length === 0) return;
+    const star_fill_markup = document.querySelector('.hydrogen_reviews__markup--star-fill').innerHTML;
+    const average_rating = product_reviews.length > 0 ? product_reviews.reduce((acc, review) => acc + Number(review.rating), 0) / product_reviews.length : 0;
+    const full_stars = Math.floor(average_rating);
+    let fill_stars_markup = "";
+    Array(full_stars).fill(null).forEach(function() {
+      fill_stars_markup += star_fill_markup;
+    });
+    container.innerHTML = fill_stars_markup;
+  })
+</script>
+
+{% schema %}
+{
+  "name": "Inline Star Rating",
+  "target": "section",
+  "settings": [
+    { 
+      "type": "product", 
+      "id": "product", 
+      "label": "product", 
+      "autofill": true 
+    },
+    { 
+      "type": "color", 
+      "id": "colour", 
+      "label": "Star Colour", 
+      "default": "#ff0000" 
+    },
+    {
+      "type": "range",
+      "id": "size",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "label": "Star Size",
+      "default": 20
+    }
+  ]
+}
+{% endschema %}
+
