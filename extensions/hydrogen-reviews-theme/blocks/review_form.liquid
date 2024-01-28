@@ -13,6 +13,7 @@
 </script>
 
 <form class="hydrogen_reviews__form .{{ form_id }}">
+  <input type="hidden" name="productId" value="{{ block.settings.product.id }}">
   {% if block.settings.title != blank or block.settings.content != blank %}
     <div class="rich-text hydrogen_reviews__form-header" {{ block.shopify_attributes }}>
       {% if block.settings.title != blank %}

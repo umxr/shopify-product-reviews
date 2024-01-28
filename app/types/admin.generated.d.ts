@@ -23,6 +23,16 @@ export type GetProductByHandleQuery = { productByHandle?: AdminTypes.Maybe<(
     & { metafield?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'id' | 'key' | 'namespace' | 'value'>> }
   )> };
 
+export type GetProductByIdQueryVariables = AdminTypes.Exact<{
+  id: AdminTypes.Scalars['ID']['input'];
+}>;
+
+
+export type GetProductByIdQuery = { product?: AdminTypes.Maybe<(
+    Pick<AdminTypes.Product, 'id' | 'title' | 'handle'>
+    & { metafield?: AdminTypes.Maybe<Pick<AdminTypes.Metafield, 'id' | 'key' | 'namespace' | 'value'>> }
+  )> };
+
 export type GetProductsByFowardPaginationQueryVariables = AdminTypes.Exact<{
   numProducts: AdminTypes.Scalars['Int']['input'];
   cursor?: AdminTypes.InputMaybe<AdminTypes.Scalars['String']['input']>;
@@ -60,6 +70,7 @@ export type CreateMetafieldDefinitionMutation = { metafieldDefinitionCreate?: Ad
 
 interface GeneratedQueryTypes {
   "#graphql\nquery getProductByHandle($handle: String!) {\n  productByHandle(handle: $handle) {\n    id\n    title\n    handle\n    metafield(namespace: \"hydrogen_reviews\", key: \"product_reviews\") {\n      id,\n      key\n      namespace\n      value\n    }\n  }\n}": {return: GetProductByHandleQuery, variables: GetProductByHandleQueryVariables},
+  "#graphql\n  query getProductById($id: ID!) {\n    product(id: $id) {\n      id\n      title\n      handle\n      metafield(namespace: \"hydrogen_reviews\", key: \"product_reviews\") {\n        id,\n        key\n        namespace\n        value\n      }\n    }\n  }\n": {return: GetProductByIdQuery, variables: GetProductByIdQueryVariables},
   "#graphql\n  query getProductsByFowardPagination($numProducts: Int!, $cursor: String) {\n    products (first: $numProducts, after: $cursor) {\n      edges {\n        node {\n          id\n          title\n          status\n          handle\n          metafield(namespace: \"hydrogen_reviews\", key: \"product_reviews\") {\n            key\n            namespace\n            value\n          }\n        }\n      },\n      pageInfo {\n        startCursor,\n        endCursor,\n        hasNextPage\n        hasPreviousPage\n      }\n    }\n  }\n": {return: GetProductsByFowardPaginationQuery, variables: GetProductsByFowardPaginationQueryVariables},
   "#graphql\n  query getProductsByBackwardPagination($numProducts: Int!, $cursor: String) {\n    products (last: $numProducts, before: $cursor) {\n      edges {\n        node {\n          id\n          title\n          status\n          handle\n          metafield(namespace: \"hydrogen_reviews\", key: \"product_reviews\") {\n            key\n            namespace\n            value\n          }\n        }\n      },\n      pageInfo {\n        startCursor,\n        endCursor,\n        hasPreviousPage\n        hasNextPage\n      }\n    }\n  }\n": {return: GetProductsByBackwardPaginationQuery, variables: GetProductsByBackwardPaginationQueryVariables},
   "#graphql\n  query getMetafieldDefinition{\n    metafieldDefinitions(namespace: \"hydrogen_reviews\", ownerType: PRODUCT, first: 1) {\n      edges {\n        node {\n          name\n          type {\n            name\n          }\n        }\n      }\n    }\n  }\n": {return: GetMetafieldDefinitionQuery, variables: GetMetafieldDefinitionQueryVariables},

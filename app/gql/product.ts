@@ -16,7 +16,7 @@ mutation updateProduct($input: ProductInput!) {
   }
 }`;
 
-export const GET_PRODUCT_QUERY = `#graphql
+export const GET_PRODUCT_BY_HANDLE_QUERY = `#graphql
 query getProductByHandle($handle: String!) {
   productByHandle(handle: $handle) {
     id
@@ -30,6 +30,22 @@ query getProductByHandle($handle: String!) {
     }
   }
 }`;
+
+export const GET_PRODUCT_BY_ID_QUERY = `#graphql
+  query getProductById($id: ID!) {
+    product(id: $id) {
+      id
+      title
+      handle
+      metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
+        id,
+        key
+        namespace
+        value
+      }
+    }
+  }
+`;
 
 export const FORWARD_PAGINATION_QUERY = `#graphql
   query getProductsByFowardPagination($numProducts: Int!, $cursor: String) {

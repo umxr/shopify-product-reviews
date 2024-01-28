@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
   async function handleSubmit(e) {
     e.preventDefault();
     const formData = new FormData(form);
+    formData.append("reviews", JSON.stringify(widget_data.product_reviews));
     const submitResponse = await fetch("/apps/hydrogen-reviews", {
       method: "POST",
       headers: {
@@ -15,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
       body: formData,
     });
     const submitResponseJson = await submitResponse.json();
+    // Handle Response
     console.log(submitResponseJson);
   }
 
