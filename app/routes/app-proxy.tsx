@@ -1,8 +1,9 @@
 import {
-  json,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
 } from "@remix-run/node";
+import { RequestMethod } from "~/actions";
+import { createActionHandlers } from "~/actions/handle";
 import { authenticate } from "~/shopify.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -12,10 +13,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const method = request.method;
-  if (method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+  const { admin } = await authenticate.public.appProxy(request);
+  const { handlePostRequest } = createActionHandlers(admin);
+  switch (request.method) {
+    case RequestMethod.POST:
+      return await handlePostRequest(request);
+    default:
+      return new Response(null, { status: 405 }); // Method Not Allowed
   }
-  const payload = await request.json();
-  return json(payload);
 }

@@ -1,15 +1,16 @@
 {% assign product_reference = block.settings.product %}
 {% assign product_reviews = product_reference.metafields.hydrogen_reviews.product_reviews %}
-{% assign random_number = "now" | date: "%N" | modulo: 100 %}
+{% assign inline_stars_id = "now" | date: "%N" | modulo: 100 | prepend: "widget_id_" %}
 
-<style>
-  .hydrogen_reviews__container-{{ random_number }} {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-</style>
+{{ 'inline_stars.css' | asset_url | stylesheet_tag }}
+
+<script>
+  window.inline_stars_widget = {
+    product_id: {{ block.settings.product.id }},
+    widget_id: "{{ inline_stars_id }}",
+    product_reviews: {% if product_reviews != blank and product_reviews != '' %}{{ product_reviews }}{% else %}[]{% endif %}
+  };
+</script>
 
 <div style="display:none;" class="hydrogen_reviews__markup">
   <div class="hydrogen_reviews__markup--star-fill">
@@ -18,24 +19,9 @@
     </span>
   </div>
 </div>
-<div class="hydrogen_reviews__container-{{ random_number }}"></div>
+<div class="hydrogen_reviews__container {{ inline_stars_id }}"></div>
 
-<script id="product_reviews" type="application/json">{{ product_reviews }}</script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const product_reviews = JSON.parse(document.getElementById('product_reviews').innerHTML || "[]");
-    const container = document.querySelector('.hydrogen_reviews__container-{{ random_number }}');
-    if (!container || product_reviews.length === 0) return;
-    const star_fill_markup = document.querySelector('.hydrogen_reviews__markup--star-fill').innerHTML;
-    const average_rating = product_reviews.length > 0 ? product_reviews.reduce((acc, review) => acc + Number(review.rating), 0) / product_reviews.length : 0;
-    const full_stars = Math.floor(average_rating);
-    let fill_stars_markup = "";
-    Array(full_stars).fill(null).forEach(function() {
-      fill_stars_markup += star_fill_markup;
-    });
-    container.innerHTML = fill_stars_markup;
-  })
-</script>
+<script src="{{ 'inline_stars.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {

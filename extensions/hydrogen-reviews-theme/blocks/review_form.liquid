@@ -1,6 +1,16 @@
+{% assign product_reference = block.settings.product %}
+{% assign product_reviews = product_reference.metafields.hydrogen_reviews.product_reviews %}
 {% assign form_id = "now" | date: "%N" | modulo: 100 %}
 
-<form class="hydrogen_reviews__form-{{ form_id }}">
+<script>
+  window.review_form_widget = {
+    product_id: {{ block.settings.product.id }},
+    form_id: "{{ form_id }}",
+    product_reviews: {% if product_reviews != blank and product_reviews != '' %}{{ product_reviews }}{% else %}[]{% endif %}
+  };
+</script>
+
+<form class="hydrogen_reviews__form .{{ form_id }}">
   <div>
     <label for="name">Name</label>
     <input type="text" name="name" id="name" required />
@@ -26,29 +36,7 @@
   </div>
 </form>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const form = document.querySelector(".hydrogen_reviews__form-{{ form_id }}")
-    if (!form) return;
-    console.log("form", form);
-    async function handleSubmit(e) {
-      e.preventDefault();
-      const formData = new FormData(form);
-      const submitResponse = await fetch("/apps/hydrogen-reviews", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(Object.fromEntries(formData))
-      });
-      const submitResponseJson = await submitResponse.json();
-      console.log(submitResponseJson);
-    }
-
-    form.addEventListener("submit", handleSubmit);
-
-  })
-</script>
+<script src="{{ 'review_form.js' | asset_url }}" defer="defer"></script>
 
 {% schema %}
 {
