@@ -13,6 +13,20 @@
 </script>
 
 <form class="hydrogen_reviews__form .{{ form_id }}">
+  {% if block.settings.title != blank or block.settings.content != blank %}
+    <div class="rich-text hydrogen_reviews__form-header" {{ block.shopify_attributes }}>
+      {% if block.settings.title != blank %}
+        <h2 class="rich-text__heading rte inline-richtext">
+          {{ block.settings.title }}
+        </h2>
+      {% endif %}
+      {% if block.settings.content != blank %}
+        <div class="rich-text__text rte">
+          {{ block.settings.content }}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
   <div class="field">
     <input
       class="field__input"
@@ -66,6 +80,17 @@
       "id": "product", 
       "label": "product", 
       "autofill": true 
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Leave a review"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "content",
+      "label": "Content"
     }
   ]
 }
