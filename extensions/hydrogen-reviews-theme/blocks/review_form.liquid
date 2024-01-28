@@ -2,6 +2,8 @@
 {% assign product_reviews = product_reference.metafields.hydrogen_reviews.product_reviews %}
 {% assign form_id = "now" | date: "%N" | modulo: 100 %}
 
+{{ 'review_form.css' | asset_url | stylesheet_tag }}
+
 <script>
   window.review_form_widget = {
     product_id: {{ block.settings.product.id }},
@@ -11,13 +13,20 @@
 </script>
 
 <form class="hydrogen_reviews__form .{{ form_id }}">
-  <div>
-    <label for="name">Name</label>
-    <input type="text" name="name" id="name" required />
+  <div class="field">
+    <input
+      class="field__input"
+      autocomplete="name"
+      type="text"
+      id="name"
+      name="name"
+      placeholder="{{ 'review_form.name_placeholder' | t }}"
+    >
+    <label class="field__label" for="name">{{ 'review_form.name_label' | t }}</label>
   </div>
-  <div>
-    <label for="rating">Rating</label>
-    <select name="rating" required>
+  <div class="field">
+    <select name="rating" class="select__select" required>
+      <option value="" disabled selected>{{ 'review_form.rating_placeholder' | t }}</option>
       <option value="1">1 Star</option>
       <option value="2">2 Stars</option>
       <option value="3">3 Stars</option>
@@ -25,13 +34,22 @@
       <option value="5">5 Stars</option>
     </select>
   </div>
-  <div>
-    <label for="message">Message</label>
-    <textarea name="message" id="message" rows="4" required></textarea>
+  <div class="field">
+    <textarea
+      class="text-area field__input"
+      id="message"
+      name="message"
+      placeholder="{{ 'review_form.message_placeholder' | t }}"
+      rows="4"
+    >
+    </textarea>
+    <label class="form__label field__label" for="message">
+      {{ 'review_form.message_label' | t }}
+    </label>
   </div>
   <div>
-    <button type="submit">
-      Submit
+    <button type="submit" class="button">
+      {{ "review_form.send" | t }}
     </button>
   </div>
 </form>
