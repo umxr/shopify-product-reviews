@@ -3,6 +3,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector(
     `.hydrogen_reviews__form.${widget_data.form_id}`
   );
+  const success_message = document.querySelector(
+    ".hydrogen_reviews__form-status--success"
+  );
+  const error_message = document.querySelector(
+    ".hydrogen_reviews__form-status--error"
+  );
   if (!form) return;
   async function handleSubmit(e) {
     e.preventDefault();
@@ -22,7 +28,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     const submitResponseJson = await submitResponse.json();
     // Handle Response
-    console.log(submitResponseJson);
+    const { status } = submitResponseJson;
+    if (status === "sucess") {
+      form.reset();
+      success_message.display = "block";
+      error_message.display = "none";
+    } else {
+      success_message.display = "none";
+      error_message.display = "block";
+    }
   }
 
   form.addEventListener("submit", handleSubmit);

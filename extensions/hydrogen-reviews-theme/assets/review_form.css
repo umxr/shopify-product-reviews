@@ -5,3 +5,8 @@
 .hydrogen_reviews__form .field {
   margin-bottom: 1rem;
 }
+
+.hydrogen_reviews__form-status--success,
+.hydrogen_reviews__form-status--error {
+  display: none;
+}

@@ -13,6 +13,8 @@
     "message_label": "Message",
     "message_placeholder": "Your Review",
     "rating_placeholder": "Your Rating",
-    "send": "Send"
+    "send": "Send",
+    "success_message_html": "Thank you for your review!",
+    "error_message_html": "Something went wrong. Please try again."
   }
 }
