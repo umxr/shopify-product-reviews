@@ -7,13 +7,18 @@ document.addEventListener("DOMContentLoaded", function () {
   async function handleSubmit(e) {
     e.preventDefault();
     const formData = new FormData(form);
-    formData.append("reviews", JSON.stringify(widget_data.product_reviews));
+    const payload = {
+      productId: widget_data.product_id,
+      name: formData.get("name"),
+      rating: formData.get("rating"),
+      message: formData.get("message"),
+    };
     const submitResponse = await fetch("/apps/hydrogen-reviews", {
       method: "POST",
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "application/json",
       },
-      body: formData,
+      body: JSON.stringify(payload),
     });
     const submitResponseJson = await submitResponse.json();
     // Handle Response

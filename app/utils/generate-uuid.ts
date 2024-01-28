@@ -10,6 +10,3 @@ export function generateUUID(): string {
   );
   return uuid;
 }
-
-// Example usage:
-console.log(generateUUID());

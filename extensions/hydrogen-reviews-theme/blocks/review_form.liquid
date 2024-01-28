@@ -1,19 +1,17 @@
 {% assign product_reference = block.settings.product %}
 {% assign product_reviews = product_reference.metafields.hydrogen_reviews.product_reviews %}
-{% assign form_id = "now" | date: "%N" | modulo: 100 %}
+{% assign form_id = "now" | date: "%N" | modulo: 100 | prepend: "widget_id_" %}
 
 {{ 'review_form.css' | asset_url | stylesheet_tag }}
 
 <script>
   window.review_form_widget = {
     product_id: {{ block.settings.product.id }},
-    form_id: "{{ form_id }}",
-    product_reviews: {% if product_reviews != blank and product_reviews != '' %}{{ product_reviews }}{% else %}[]{% endif %}
+    form_id: "{{ form_id }}"
   };
 </script>
 
-<form class="hydrogen_reviews__form .{{ form_id }}">
-  <input type="hidden" name="productId" value="{{ block.settings.product.id }}">
+<form class="hydrogen_reviews__form {{ form_id }}">
   {% if block.settings.title != blank or block.settings.content != blank %}
     <div class="rich-text hydrogen_reviews__form-header" {{ block.shopify_attributes }}>
       {% if block.settings.title != blank %}

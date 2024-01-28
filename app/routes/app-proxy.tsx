@@ -19,24 +19,23 @@ export async function action({ request }: ActionFunctionArgs) {
   const { admin } = await authenticate.public.appProxy(request);
   const { updateProductReviews } = createMetafieldHandler(admin);
   const { getProductById } = createProductHandler(admin);
-  const formData = await request.formData();
+  const { productId, name, rating, message } = await request.json();
   switch (request.method) {
     case RequestMethod.POST:
       try {
-        const reviews = JSON.parse(formData.get("reviews") as string);
-        const productId = formData.get("productId");
-        const product = await getProductById(productId as string);
-        const metafieldId = product.metafield?.id;
+        const productGraphId = `gid://shopify/Product/${productId}`;
+        const { metafield, reviews } = await getProductById(productGraphId);
+        const metafieldId = metafield?.id;
         const newReview = {
-          name: formData.get("name") as string,
-          message: formData.get("message") as string,
-          rating: formData.get("rating") as string,
+          name,
+          message,
+          rating,
           id: generateUUID(),
         };
         const newReviewList = [...reviews, newReview];
         await updateProductReviews({
           metafieldId: metafieldId as string,
-          productId: productId as string,
+          productId: productGraphId,
           reviews: newReviewList,
         });
         return json({
@@ -44,7 +43,7 @@ export async function action({ request }: ActionFunctionArgs) {
           status: "success",
         });
       } catch (error) {
-        console.log("Failed to create review", error);
+        console.error("Failed to create review", error);
         return json({
           action: "create",
           status: "error",

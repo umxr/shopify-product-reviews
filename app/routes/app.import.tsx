@@ -205,8 +205,6 @@ export default function Import() {
   const isCancelDisabled = !file;
   const isImportDisbled = !file;
 
-  console.log(actionData);
-
   return (
     <Page
       backAction={{
