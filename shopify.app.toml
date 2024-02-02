@@ -1,8 +1,8 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-name = "hydrogen-reviews"
+name = "Hydrogen Reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://concluded-liquid-full-yours.trycloudflare.com"
+application_url = "https://puzzles-aaron-endless-officials.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,13 +11,18 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://concluded-liquid-full-yours.trycloudflare.com/auth/callback",
-  "https://concluded-liquid-full-yours.trycloudflare.com/auth/shopify/callback",
-  "https://concluded-liquid-full-yours.trycloudflare.com/api/auth/callback"
+  "https://puzzles-aaron-endless-officials.trycloudflare.com/auth/callback",
+  "https://puzzles-aaron-endless-officials.trycloudflare.com/auth/shopify/callback",
+  "https://puzzles-aaron-endless-officials.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
 api_version = "2024-01"
+
+[app_proxy]
+url = "https://puzzles-aaron-endless-officials.trycloudflare.com/app-proxy"
+subpath = "hydrogen-reviews"
+prefix = "apps"
 
 [pos]
 embedded = false

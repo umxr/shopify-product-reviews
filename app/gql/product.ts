@@ -37,6 +37,9 @@ export const GET_PRODUCT_BY_ID_QUERY = `#graphql
       id
       title
       handle
+      featuredImage {
+        url
+      }
       metafield(namespace: "hydrogen_reviews", key: "product_reviews") {
         id,
         key
