@@ -10,7 +10,7 @@ The source code in this repository includes several app extensions and features 
 - **Review Form Theme Extension:** Provides customers with an easy and intuitive way to submit reviews for products they have purchased, ensuring you collect valuable feedback.
 - **Embedded Admin App:** A comprehensive backend app that supports all CRUD operations (Create, Read, Update, Delete) plus import/export functionalities, giving store administrators full control over reviews management.
 - **Admin Link from Product Admin:** Enables quick access to the reviews admin panel directly from the Shopify product management page, streamlining the workflow for store managers.
-- **Post Purchase UI (WIP):** Work in progress feature to engage customers with review requests post-purchase, improving the likelihood of receiving reviews.
+- **Post Purchase UI:** Feature to engage customers with review requests post-purchase, improving the likelihood of receiving reviews.
 - **Admin Blocks (WIP):** Work in progress feature to provide customizable blocks within the Shopify admin interface, allowing for more dynamic content management related to reviews.
 
 ## Getting Started
@@ -41,7 +41,7 @@ To get started with the Shopify Product Reviews app, follow these steps:
    Once everything is set up, you can start the app with:
 
    ```
-   npm start
+   npm run dev
    ```
 
 5. **Install the Extensions:**
