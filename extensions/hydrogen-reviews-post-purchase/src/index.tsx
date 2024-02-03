@@ -30,7 +30,7 @@ import {
 } from "@shopify/post-purchase-ui-extensions-react";
 import { useEffect, useState, useCallback } from "react";
 import type { GetProductByIdQuery } from "~/types/admin.generated";
-import { Maybe, Metafield } from "~/types/admin.types";
+import type { Maybe, Metafield } from "~/types/admin.types";
 
 const APP_URL = "https://strings-ignored-smooth-review.trycloudflare.com";
 
