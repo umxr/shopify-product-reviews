@@ -2,7 +2,7 @@
 
 name = "Hydrogen Reviews"
 client_id = "c0116ccf9fafb79e22c1a9dcfbb968fd"
-application_url = "https://puzzles-aaron-endless-officials.trycloudflare.com"
+application_url = "https://strings-ignored-smooth-review.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,16 +11,16 @@ scopes = "write_products,read_products"
 
 [auth]
 redirect_urls = [
-  "https://puzzles-aaron-endless-officials.trycloudflare.com/auth/callback",
-  "https://puzzles-aaron-endless-officials.trycloudflare.com/auth/shopify/callback",
-  "https://puzzles-aaron-endless-officials.trycloudflare.com/api/auth/callback"
+  "https://strings-ignored-smooth-review.trycloudflare.com/auth/callback",
+  "https://strings-ignored-smooth-review.trycloudflare.com/auth/shopify/callback",
+  "https://strings-ignored-smooth-review.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
 api_version = "2024-01"
 
 [app_proxy]
-url = "https://puzzles-aaron-endless-officials.trycloudflare.com/app-proxy"
+url = "https://strings-ignored-smooth-review.trycloudflare.com/app-proxy"
 subpath = "hydrogen-reviews"
 prefix = "apps"
 

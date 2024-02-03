@@ -25,11 +25,16 @@ import {
   TextField,
   Spinner,
   Button,
+  Banner,
+  Text,
 } from "@shopify/post-purchase-ui-extensions-react";
 import { useEffect, useState, useCallback } from "react";
 import type { GetProductByIdQuery } from "~/types/admin.generated";
+import { Maybe, Metafield } from "~/types/admin.types";
 
-const APP_URL = "https://puzzles-aaron-endless-officials.trycloudflare.com";
+const APP_URL = "https://strings-ignored-smooth-review.trycloudflare.com";
+
+type Status = "idle" | "success" | "error" | "loading";
 
 /**
  * Entry point for the `ShouldRender` Extension Point.
@@ -55,15 +60,19 @@ render("Checkout::PostPurchase::Render", () => <App />);
 // Top-level React component
 export function App() {
   const { inputData } = useExtensionInput();
-  const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [rating, setRating] = useState("");
   const [ratingError, setRatingError] = useState("");
   const [message, setMessage] = useState("");
   const [messageError, setMessageError] = useState("");
-  const [selectedProduct, setSelectedProduct] =
-    useState<GetProductByIdQuery["product"]>(null);
+  const [selectedProduct, setSelectedProduct] = useState<{
+    product: GetProductByIdQuery["product"];
+    metafield: Maybe<Pick<Metafield, "id" | "key" | "namespace" | "value">>;
+  } | null>(null);
+  const [productFetchStatus, setProductFetchStatus] =
+    useState<Status>("loading");
+  const [reviewSubmitStatus, setReviewSubmitStatus] = useState<Status>("idle");
 
   const primaryProduct = inputData.initialPurchase.lineItems[0].product;
 
@@ -92,32 +101,72 @@ export function App() {
     }
   }, [message]);
 
-  const handleSubmit = useCallback(() => {
-    console.log("Submit");
+  const resetForm = useCallback(() => {
+    setName("");
+    setRating("");
+    setMessage("");
+    setNameError("");
+    setRatingError("");
+    setMessageError("");
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const response = await fetch(`${APP_URL}/api/product`, {
+  const handleSubmit = useCallback(async () => {
+    if (!name || !rating || !message) return null;
+    try {
+      setReviewSubmitStatus("loading");
+      const submitRequest = await fetch(`${APP_URL}/api/reviews`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${inputData.token}`,
           "Content-Type": "application/json",
+          Authorization: `Bearer ${inputData.token}`,
         },
         body: JSON.stringify({
           productId: primaryProduct.id,
+          name,
+          rating,
+          message,
         }),
       });
-      const data = await response.json();
-      setSelectedProduct(data);
-      setLoading(false);
+      await submitRequest.json();
+      setReviewSubmitStatus("success");
+      resetForm();
+    } catch (error) {
+      console.error("Error submitting review", error);
+      setReviewSubmitStatus("error");
+    }
+  }, [inputData.token, message, name, primaryProduct.id, rating, resetForm]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setProductFetchStatus("loading");
+        const response = await fetch(`${APP_URL}/api/product`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${inputData.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productId: primaryProduct.id,
+          }),
+        });
+        const data = await response.json();
+        setSelectedProduct(data);
+        setProductFetchStatus("success");
+      } catch (error) {
+        console.error("Error fetching product", error);
+        setProductFetchStatus("error");
+      }
     })();
   }, [inputData.token, primaryProduct.id]);
 
   const isSubmitDisabled = !name || !rating || !message;
 
-  if (loading) {
+  const product = selectedProduct?.product;
+
+  console.log("selectedProduct", selectedProduct);
+
+  if (productFetchStatus === "loading") {
     return (
       <BlockStack spacing="loose">
         <CalloutBanner title="Just a moment...">
@@ -126,6 +175,18 @@ export function App() {
         <Layout>
           <Spinner size="small" />
         </Layout>
+      </BlockStack>
+    );
+  }
+
+  if (productFetchStatus === "error") {
+    return (
+      <BlockStack spacing="loose">
+        <Banner status="critical">
+          <Text>
+            There was an error fetching the product. Please try again later.
+          </Text>
+        </Banner>
       </BlockStack>
     );
   }
@@ -144,13 +205,18 @@ export function App() {
         ]}
       >
         <View>
-          <Image source={selectedProduct?.featuredImage?.url} />
+          <Image source={product?.featuredImage?.url} />
         </View>
         <View />
         <BlockStack spacing="xloose">
           <TextContainer>
-            <Heading>{selectedProduct?.title}</Heading>
+            <Heading>{product?.title}</Heading>
           </TextContainer>
+          {reviewSubmitStatus === "success" && (
+            <Banner status="success">
+              <Text>Thank you for your review!</Text>
+            </Banner>
+          )}
           <Form onSubmit={handleSubmit}>
             <FormLayout>
               <TextField
@@ -208,7 +274,11 @@ export function App() {
                 onBlur={handleMessageBlur}
                 error={messageError}
               />
-              <Button disabled={isSubmitDisabled} submit>
+              <Button
+                disabled={isSubmitDisabled}
+                submit
+                loading={reviewSubmitStatus === "loading"}
+              >
                 Submit
               </Button>
             </FormLayout>

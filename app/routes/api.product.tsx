@@ -22,8 +22,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const { productId } = await request.json();
         const graphId = `gid://shopify/Product/${productId}`;
         const { getProductById } = createProductHandler(admin);
-        const { product } = await getProductById(graphId);
-        return cors(json(product));
+        const { product, metafield } = await getProductById(graphId);
+        return cors(
+          json({
+            product,
+            metafield,
+          })
+        );
       } catch (error) {
         return cors(json({ error: "Error fetching product" }));
       }
