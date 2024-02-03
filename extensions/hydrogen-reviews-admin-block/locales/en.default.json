@@ -1,0 +1,5 @@
+{
+  "name": "hydrogen-reviews-admin-block",
+  "welcome": "Welcome to the {{target}} extension!",
+  "average_rating": "Average Rating"
+}

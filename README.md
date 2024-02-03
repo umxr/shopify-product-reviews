@@ -11,7 +11,7 @@ The source code in this repository includes several app extensions and features 
 - **Embedded Admin App:** A comprehensive backend app that supports all CRUD operations (Create, Read, Update, Delete) plus import/export functionalities, giving store administrators full control over reviews management.
 - **Admin Link from Product Admin:** Enables quick access to the reviews admin panel directly from the Shopify product management page, streamlining the workflow for store managers.
 - **Post Purchase UI:** Feature to engage customers with review requests post-purchase, improving the likelihood of receiving reviews.
-- **Admin Blocks (WIP):** Work in progress feature to provide customizable blocks within the Shopify admin interface, allowing for more dynamic content management related to reviews.
+- **Admin Blocks:** Provides customers the ability to see app data within the admin without the need to open the app
 
 ## Getting Started
 
